@@ -1,0 +1,27 @@
+# https://github.com/github/gitignore/blob/master/CMake.gitignore
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Makefile
+cmake_install.cmake
+install_manifest.txt
+
+#Additions to https://github.com/github/gitignore/blob/master/CMake.gitignore
+Testing
+compile_commands.json
+.usages_clang
+dist/
+# *.crt
+# *.key
+*.pem
+*.db
+
+# Visual Studio 2015/2017 cache/options directory
+.vs
+build/
+_build/
+.vscode/
+docs/doxygen_output
+*.bin
+*.zip
+temp/
