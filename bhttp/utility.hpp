@@ -27,14 +27,10 @@
 namespace SimpleWeb {
   using string_view = std::string_view;
 }
-#elif !defined(ASIO_STANDALONE)
+#else 
 #include <boost/utility/string_ref.hpp>
 namespace SimpleWeb {
   using string_view = boost::string_ref;
-}
-#else
-namespace SimpleWeb {
-  using string_view = const std::string &;
 }
 #endif
 

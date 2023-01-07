@@ -15,3 +15,13 @@ async def hello(url):
 
 asyncio.run(hello("ws://localhost:8888/ws"))
 asyncio.run(hello("wss://localhost:9999/hello"))
+
+async def recv_notify(url):
+    cert_ignore = ssl._create_unverified_context() if url.startswith('wss') else None
+    async with websockets.connect(url, ssl=cert_ignore) as websocket:
+        while True:
+            noty_msg = await websocket.recv()
+            print(f"<<< {noty_msg}")
+
+
+asyncio.run(recv_notify("ws://localhost:8888/ws"))

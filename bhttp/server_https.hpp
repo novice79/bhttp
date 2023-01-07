@@ -2,12 +2,8 @@
 #define SIMPLE_WEB_SERVER_HTTPS_HPP
 
 #include "server_http.hpp"
-
-#ifdef ASIO_STANDALONE
-#include <asio/ssl.hpp>
-#else
 #include <boost/asio/ssl.hpp>
-#endif
+
 
 #include <algorithm>
 #include <openssl/ssl.h>
@@ -29,14 +25,12 @@ namespace SimpleWeb {
      */
     Server(const std::string &certification_file, const std::string &private_key_file, const std::string &verify_file = std::string())
         : ServerBase<HTTPS>::ServerBase(443),
-#if(ASIO_STANDALONE && ASIO_VERSION >= 101300) || BOOST_ASIO_VERSION >= 101300
-          context(asio::ssl::context::tls_server) {
+
+    context(asio::ssl::context::tls_server) {
       // Disabling TLS 1.0 and 1.1 (see RFC 8996)
       context.set_options(asio::ssl::context::no_tlsv1);
       context.set_options(asio::ssl::context::no_tlsv1_1);
-#else
-          context(asio::ssl::context::tlsv12) {
-#endif
+
 
       context.use_certificate_chain_file(certification_file);
       context.use_private_key_file(private_key_file, asio::ssl::context::pem);

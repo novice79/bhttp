@@ -187,7 +187,7 @@ public:
                         }
                         else
                         {
-                            std::array<char, buf_size> buf;
+                            std::vector<char> buf(length);
                             streamsize read_len = ifs->read( &buf[0], static_cast<streamsize>(length) ).gcount();
                             if(read_len > 0)
                             {

@@ -13,21 +13,12 @@
 #include <memory>
 #include <thread>
 #include <unordered_set>
-
-// Late 2017 TODO: remove the following checks and always use std::regex
-#ifdef USE_BOOST_REGEX
-#include <boost/regex.hpp>
-namespace SimpleWeb {
-  namespace regex = boost;
-}
-#else
 #include <regex>
+
+
+
 namespace SimpleWeb {
   namespace regex = std;
-}
-#endif
-
-namespace SimpleWeb {
   template <class socket_type>
   class SocketServer;
 

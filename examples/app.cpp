@@ -12,13 +12,23 @@ int main(int argc, char **argv)
 // start a https/wss server
     // if expect it to run_detached(not block main thread), need to keep it in memory
     BHS app("misc/server.crt", "misc/server.key");
+    // curl https://127.0.0.1:9999/
+    app.serve_dir("*", Util::exe_path(argv[0]) / "www")
     // curl https://127.0.0.1:9999/info
-    app.get("^/info$", [](auto res, auto req){
+    .get("^/info$", [](auto res, auto req){
         stringstream s;
         s << "C++ boost https server, handled by thread: ";
         s << std::this_thread::get_id();
         cout<< s.str() << endl;
         res->write( s.str() );
+    })
+    // curl -X PUT https://127.0.0.1:9999/update
+    .put("^/update$", [](auto res, auto req){
+        res->write( "test put endpoint" );
+    })
+    // curl -X DELETE https://127.0.0.1:9999/delete
+    .del("^/delete$", [](auto res, auto req){
+        res->write( "test delete endpoint" );
     })
     // url: "wss://localhost:9999/hello"
     .ws("^/hello$", {
@@ -97,7 +107,7 @@ int main(int argc, char **argv)
     .cron_job([](auto* app){
     //   printf("run cron job every four seconds forever\n");  
         // parameters: 1. ws endpoint[regex string], 2. msg to be sent
-        app->ws_broadcast("^/ws$", "this msg to every client every four seconds");
+        app->ws_broadcast("^/ws$", Util::cur_time() + ": this msg to every client every four seconds");
     }, 4, 0)
     .listen(8888).run();
     return 0;

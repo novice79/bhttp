@@ -2,12 +2,8 @@
 #define SIMPLE_WEB_CLIENT_WSS_HPP
 
 #include "client_ws.hpp"
-
-#ifdef ASIO_STANDALONE
-#include <asio/ssl.hpp>
-#else
 #include <boost/asio/ssl.hpp>
-#endif
+
 
 namespace SimpleWeb {
   using WSS = asio::ssl::stream<asio::ip::tcp::socket>;
@@ -28,14 +24,13 @@ namespace SimpleWeb {
                  const std::string &certification_file = std::string(), const std::string &private_key_file = std::string(),
                  const std::string &verify_file = std::string())
         : SocketClientBase<WSS>::SocketClientBase(server_port_path, 443),
-#if(ASIO_STANDALONE && ASIO_VERSION >= 101300) || BOOST_ASIO_VERSION >= 101300
-          context(asio::ssl::context::tls_client) {
+
+// grep "BOOST_ASIO_VERSION" ~/cpp_libs/boost_1_79_0/boost/asio/version.hpp
+// #define BOOST_ASIO_VERSION 102202 // 1.22.2
+    context(asio::ssl::context::tls_client) {
       // Disabling TLS 1.0 and 1.1 (see RFC 8996)
       context.set_options(asio::ssl::context::no_tlsv1);
       context.set_options(asio::ssl::context::no_tlsv1_1);
-#else
-          context(asio::ssl::context::tlsv12) {
-#endif
 
       if(certification_file.size() > 0 && private_key_file.size() > 0) {
         context.use_certificate_chain_file(certification_file);

@@ -50,16 +50,12 @@ namespace SimpleWeb {
     }
   };
 } // namespace SimpleWeb
-#ifndef ASIO_STANDALONE
 namespace boost {
-#endif
   namespace asio {
     template <>
     struct is_match_condition<SimpleWeb::HeaderEndMatch> : public std::true_type {};
   } // namespace asio
-#ifndef ASIO_STANDALONE
 } // namespace boost
-#endif
 
 namespace SimpleWeb {
   template <class socket_type>

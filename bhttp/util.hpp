@@ -17,6 +17,7 @@
 #include <map>
 #include <queue>
 #include <functional>
+#include <ctime>
 
 #include <boost/asio.hpp>
 #include <boost/format.hpp>
@@ -368,5 +369,13 @@ struct Util
 		}
 
 		return static_cast<unsigned char>(c);
+	}
+	static std::string cur_time()
+	{
+		auto t = std::time(nullptr);
+    	auto tm = *std::localtime(&t);
+		std::ostringstream oss;
+		oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
+		return oss.str();
 	}
 }; // class Util

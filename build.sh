@@ -25,7 +25,11 @@ cmake --install $dir
 
 # write static test files
 mkdir -p $PWD/dist/bin/{www,store}
-echo "hello world from www dir static index.html file" > $PWD/dist/bin/www/index.html
+# echo "hello world from www dir static index.html file" > $PWD/dist/bin/www/index.html
 echo "hello world from store dir static index.html file" > $PWD/dist/bin/store/index.html
+# cd test && npm create vite@latest spa -- --template react
+cd test/spa && npm i && npm run build
+cd -
 # run example exe
-# ./dist/bin/http_examples
+# ./dist/bin/app
+# and then use browser open http://localhost:8888/
