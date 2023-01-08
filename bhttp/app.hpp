@@ -156,6 +156,8 @@ public:
                     if (*ifs)
                     {
                         header.emplace("Content-Type", Util::mime_type(path.string()) );
+                        // for firefox need to know you can handle range seeking
+                        header.emplace("Accept-Ranges", "bytes");
                         uint64_t file_len = ifs->tellg();
                         ifs->seekg(0, ios::beg);
                         uint64_t length = file_len;
@@ -171,7 +173,6 @@ public:
                             length = (end - begin) + 1;
                             range = "bytes " + vs[0] + "-" + to_string(end) + "/" + to_string(file_len);
                             header.emplace("Content-Range", range); 
-                            header.emplace("Accept-Ranges", "bytes");
                             header.emplace("Content-Length", to_string(length));
                             res->write(SimpleWeb::StatusCode::success_partial_content, header);
                             ifs->seekg(begin, ios::beg);
