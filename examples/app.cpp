@@ -15,7 +15,7 @@ int main(int argc, char **argv)
     // curl https://127.0.0.1:9999/
     app.serve_dir("*", Util::exe_path(argv[0]) / "www")
     // curl https://127.0.0.1:9999/info
-    .get("^/info$", [](auto res, auto req){
+    .get("^/info$", [](auto* app, auto res, auto req){
         stringstream s;
         s << "C++ boost https server, handled by thread: ";
         s << std::this_thread::get_id();
@@ -23,25 +23,27 @@ int main(int argc, char **argv)
         res->write( s.str() );
     })
     // curl -X PUT https://127.0.0.1:9999/update
-    .put("^/update$", [](auto res, auto req){
+    .put("^/update$", [](auto* app, auto res, auto req){
+        // app can be used to notify all ws client
+        app->ws_broadcast("^/hello$", Util::cur_time() + ": hello every one, sth updated");
         res->write( "test put endpoint" );
     })
     // curl -X DELETE https://127.0.0.1:9999/delete
-    .del("^/delete$", [](auto res, auto req){
+    .del("^/delete$", [](auto* app, auto res, auto req){
         res->write( "test delete endpoint" );
     })
     // url: "wss://localhost:9999/hello"
     .ws("^/hello$", {
-        .on_open = [](auto conn){
+        .on_open = [](auto* app, auto conn){
             printf("wss received new connection\n");
         },
-        .on_close = [](auto conn, auto status, auto reason){
+        .on_close = [](auto* app, auto conn, auto status, auto reason){
             printf("wss connection closed\n");
         },
-        .on_error = [](auto conn, auto ec){
+        .on_error = [](auto* app, auto conn, auto ec){
             printf("wss error: %s\n", ec.message().c_str() );
         },
-        .on_message = [](auto conn, auto msg){
+        .on_message = [](auto* app, auto conn, auto msg){
             printf("wss received new msg: %s\n", msg->string().c_str() );
             // echo back msg
             conn->send( str(format("%1% [threadID: %2%]") % msg->string() % std::this_thread::get_id() ) );
@@ -60,17 +62,17 @@ int main(int argc, char **argv)
     // curl http://localhost:8888/store/ -- serve files in store dir within executable path
     .serve_dir("/store", Util::exe_path(argv[0]) / "store")
     // curl http://127.0.0.1:8888/info
-    .get("^/info$", [](auto res, auto req){
+    .get("^/info$", [](auto* app, auto res, auto req){
         res->write("C++ boost http server");
     })
     // curl http://127.0.0.1:8888/match/123444
-    .get("^/match/([0-9]+)$", [](auto res, auto req){
+    .get("^/match/([0-9]+)$", [](auto* app, auto res, auto req){
         res->write(req->path_match[1].str());
     })
     // curl -X POST http://127.0.0.1:8888/json \
     // -H 'Content-Type: application/json' \
     // -d '{"firstName":"John","lastName":"Smith","age":"43"}'
-    .post("^/json$", [](auto res, auto req){
+    .post("^/json$", [](auto* app, auto res, auto req){
         try {
             ptree pt;
             read_json(req->content, pt);
@@ -86,16 +88,16 @@ int main(int argc, char **argv)
     })
     // url: "ws://localhost:8888/ws"
     .ws("^/ws$", {
-        .on_open = [](auto conn){
+        .on_open = [](auto* app, auto conn){
             printf("received new websocket connection\n");
         },
-        .on_close = [](auto conn, auto status, auto reason){
+        .on_close = [](auto* app, auto conn, auto status, auto reason){
             printf("websocket connection closed\n");
         },
-        .on_error = [](auto conn, auto ec){
+        .on_error = [](auto* app, auto conn, auto ec){
             printf("websocket error: %s\n", ec.message().c_str() );
         },
-        .on_message = [](auto conn, auto msg){
+        .on_message = [](auto* app, auto conn, auto msg){
             printf("received new msg: %s\n", msg->string().c_str() );
             // echo back msg
             conn->send( str(format("%1% [threadID: %2%]") % msg->string() % std::this_thread::get_id() ) );

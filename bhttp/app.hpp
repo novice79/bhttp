@@ -54,10 +54,10 @@ class App
 public:
     struct WSCB
     {
-        std::function<void(std::shared_ptr<typename WsServer::Connection>) > on_open;
-        std::function<void(std::shared_ptr<typename WsServer::Connection>, int, const std::string&) > on_close;
-        std::function<void(std::shared_ptr<typename WsServer::Connection>, const boost::system::error_code &) > on_error;
-        std::function<void(std::shared_ptr<typename WsServer::Connection>, std::shared_ptr<typename WsServer::InMessage>) > on_message;
+        std::function<void(App*, std::shared_ptr<typename WsServer::Connection>) > on_open;
+        std::function<void(App*, std::shared_ptr<typename WsServer::Connection>, int, const std::string&) > on_close;
+        std::function<void(App*, std::shared_ptr<typename WsServer::Connection>, const boost::system::error_code &) > on_error;
+        std::function<void(App*, std::shared_ptr<typename WsServer::Connection>, std::shared_ptr<typename WsServer::InMessage>) > on_message;
     };
     App ( App && ) = default;
     App &  operator= ( App && ) = default;
@@ -164,8 +164,8 @@ public:
                             auto range = it->second;
                             boost::replace_all(range, "bytes=", "");
                             auto vs = Util::split(range, "-");
-                            uint64_t begin = stoul( vs[0] );
-                            uint64_t end = vs[1] == "" ? file_len : stoul( vs[1] );
+                            uint64_t begin = stoull( vs[0] );
+                            uint64_t end = vs[1] == "" ? file_len : stoull( vs[1] );
                             // [begin, end] not [begin, end)
                             end = std::min( file_len - 1, end );
                             length = (end - begin) + 1;
@@ -236,100 +236,127 @@ public:
     App&& get(
         std::string re,
         std::function<
-            void(std::shared_ptr<typename HttpServer::Response> res, 
-            std::shared_ptr<typename HttpServer::Request> req)
+            void(
+                App*,
+                std::shared_ptr<typename HttpServer::Response> res, 
+                std::shared_ptr<typename HttpServer::Request> req
+            )
         > cb)
     {
-        server_.resource[re]["GET"] = cb;
+        server_.resource[re]["GET"] = std::bind(cb, this, ph::_1, ph::_2);
         return std::move(*this);
     }
     App&& post(
         std::string re,
         std::function<
-            void(std::shared_ptr<typename HttpServer::Response> res, 
-            std::shared_ptr<typename HttpServer::Request> req)
+            void(
+                App*,
+                std::shared_ptr<typename HttpServer::Response> res, 
+                std::shared_ptr<typename HttpServer::Request> req
+            )
         > cb)
     {
-        server_.resource[re]["POST"] = cb;
+        server_.resource[re]["POST"] = std::bind(cb, this, ph::_1, ph::_2);
         return std::move(*this);
     }
     App&& options(
         std::string re,
         std::function<
-            void(std::shared_ptr<typename HttpServer::Response> res, 
-            std::shared_ptr<typename HttpServer::Request> req)
+            void(
+                App*,
+                std::shared_ptr<typename HttpServer::Response> res, 
+                std::shared_ptr<typename HttpServer::Request> req
+            )
         > cb)
     {
-        server_.resource[re]["OPTIONS"] = cb;
+        server_.resource[re]["OPTIONS"] = std::bind(cb, this, ph::_1, ph::_2);
         return std::move(*this);
     }
     App&& del(
         std::string re,
         std::function<
-            void(std::shared_ptr<typename HttpServer::Response> res, 
-            std::shared_ptr<typename HttpServer::Request> req)
+            void(
+                App*,
+                std::shared_ptr<typename HttpServer::Response> res, 
+                std::shared_ptr<typename HttpServer::Request> req
+            )
         > cb)
     {
-        server_.resource[re]["DELETE"] = cb;
+        server_.resource[re]["DELETE"] = std::bind(cb, this, ph::_1, ph::_2);
         return std::move(*this);
     }
     App&& patch(
         std::string re,
         std::function<
-            void(std::shared_ptr<typename HttpServer::Response> res, 
-            std::shared_ptr<typename HttpServer::Request> req)
+            void(
+                App*,
+                std::shared_ptr<typename HttpServer::Response> res, 
+                std::shared_ptr<typename HttpServer::Request> req
+            )
         > cb)
     {
-        server_.resource[re]["PATCH"] = cb;
+        server_.resource[re]["PATCH"] = std::bind(cb, this, ph::_1, ph::_2);
         return std::move(*this);
     }
     App&& put(
         std::string re,
         std::function<
-            void(std::shared_ptr<typename HttpServer::Response> res, 
-            std::shared_ptr<typename HttpServer::Request> req)
+            void(
+                App*,
+                std::shared_ptr<typename HttpServer::Response> res, 
+                std::shared_ptr<typename HttpServer::Request> req
+            )
         > cb)
     {
-        server_.resource[re]["PUT"] = cb;
+        server_.resource[re]["PUT"] = std::bind(cb, this, ph::_1, ph::_2);
         return std::move(*this);
     }
     App&& head(
         std::string re,
         std::function<
-            void(std::shared_ptr<typename HttpServer::Response> res, 
-            std::shared_ptr<typename HttpServer::Request> req)
+            void(
+                App*,
+                std::shared_ptr<typename HttpServer::Response> res, 
+                std::shared_ptr<typename HttpServer::Request> req
+            )
         > cb)
     {
-        server_.resource[re]["HEAD"] = cb;
+        server_.resource[re]["HEAD"] = std::bind(cb, this, ph::_1, ph::_2);
         return std::move(*this);
     }
     App&& connect(
         std::string re,
         std::function<
-            void(std::shared_ptr<typename HttpServer::Response> res, 
-            std::shared_ptr<typename HttpServer::Request> req)
+            void(
+                App*,
+                std::shared_ptr<typename HttpServer::Response> res, 
+                std::shared_ptr<typename HttpServer::Request> req
+            )
         > cb)
     {
-        server_.resource[re]["CONNECT"] = cb;
+        server_.resource[re]["CONNECT"] = std::bind(cb, this, ph::_1, ph::_2);
         return std::move(*this);
     }
     App&& trace(
         std::string re,
         std::function<
-            void(std::shared_ptr<typename HttpServer::Response> res, 
-            std::shared_ptr<typename HttpServer::Request> req)
+            void(
+                App*,
+                std::shared_ptr<typename HttpServer::Response> res, 
+                std::shared_ptr<typename HttpServer::Request> req
+            )
         > cb)
     {
-        server_.resource[re]["TRACE"] = cb;
+        server_.resource[re]["TRACE"] = std::bind(cb, this, ph::_1, ph::_2);
         return std::move(*this);
     }
     App&& ws( std::string re, WSCB cb)
     {
         auto &ep = ws_.endpoint[re];
-        ep.on_open = cb.on_open;
-        ep.on_close = cb.on_close;
-        ep.on_error = cb.on_error;
-        ep.on_message = cb.on_message;
+        ep.on_open = std::bind(cb.on_open, this, ph::_1);
+        ep.on_close = std::bind(cb.on_close, this, ph::_1, ph::_2, ph::_3);
+        ep.on_error = std::bind(cb.on_error, this, ph::_1, ph::_2);
+        ep.on_message = std::bind(cb.on_message, this, ph::_1, ph::_2);
         return std::move(*this);
     }
     void ws_broadcast(std::string ep, std::string msg)
