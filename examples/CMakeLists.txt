@@ -49,8 +49,8 @@ message("OPENSSL_CRYPTO_LIBRARY=${OPENSSL_CRYPTO_LIBRARY}")
 message("OPENSSL_LIBRARIES=${OPENSSL_LIBRARIES}")
 
 # sudo apt-get install libz-dev
-find_package(ZLIB REQUIRED)
-message("ZLIB_LIBRARIES=${ZLIB_LIBRARIES}")
+# find_package(ZLIB REQUIRED)
+# message("ZLIB_LIBRARIES=${ZLIB_LIBRARIES}")
 find_path(bhttp_headers "bhttp/server_http.hpp")
 if(NOT bhttp_headers)
   message(FATAL_ERROR "Can't find folder containing bhttp/server_http.hpp")
@@ -61,7 +61,7 @@ foreach(t ${targets})
         ${t} 
         ${Boost_LIBRARIES}
         ${OPENSSL_LIBRARIES}
-        ${ZLIB_LIBRARIES}
+        # ${ZLIB_LIBRARIES}
         # ZLIB::ZLIB
         ${CMAKE_DL_LIBS} 
     )

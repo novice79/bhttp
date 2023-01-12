@@ -370,12 +370,12 @@ struct Util
 
 		return static_cast<unsigned char>(c);
 	}
-	static std::string cur_time()
+	static std::string cur_time(const char* fmt = "%Y-%m-%d %H:%M:%S")
 	{
 		auto t = std::time(nullptr);
     	auto tm = *std::localtime(&t);
 		std::ostringstream oss;
-		oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
+		oss << std::put_time(&tm, fmt);
 		return oss.str();
 	}
 }; // class Util

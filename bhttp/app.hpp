@@ -7,18 +7,25 @@
 
 #include "util.hpp"
 namespace ph = std::placeholders;
-
+namespace bpt = boost::posix_time;
 class Timer : public std::enable_shared_from_this<Timer>
 {
     boost::asio::deadline_timer routine_timer_;
     int repeat_;
-    int seconds_;
+    // bpt::hours(long), bpt::minutes(long), bpt::seconds(long), 
+    // bpt::milliseconds(long), bpt::microseconds(long), bpt::nanoseconds(long)
+    bpt::time_duration dur_;
     std::function<void()> cb_;
 public:
     // ~Timer(){printf("~Timer()\n");}
-    Timer(boost::asio::io_context &io, std::function<void()> cb, int seconds = 1, int repeat = 1)
-    :routine_timer_(io, boost::posix_time::seconds(seconds)),
-    seconds_(seconds), repeat_(repeat), cb_(cb)
+    Timer(
+        boost::asio::io_context &io, 
+        std::function<void()> cb, 
+        bpt::time_duration dur = bpt::seconds(1), 
+        int repeat = 1
+    )
+    :routine_timer_(io, dur),
+    dur_(dur), repeat_(repeat), cb_(cb)
     {
 
     }
@@ -32,7 +39,7 @@ public:
         // do something here
         cb_();
         if(repeat_ > 0 && --repeat_ == 0) return;
-        t->expires_at(t->expires_at() + boost::posix_time::seconds(seconds_));
+        t->expires_at(t->expires_at() + dur_);
         t->async_wait(std::bind(&Timer::routine, shared_from_this(), ph::_1, t));
     }
 };
@@ -354,10 +361,10 @@ public:
     App&& ws( std::string re, WSCB cb)
     {
         auto &ep = ws_.endpoint[re];
-        ep.on_open = std::bind(cb.on_open, this, ph::_1);
-        ep.on_close = std::bind(cb.on_close, this, ph::_1, ph::_2, ph::_3);
-        ep.on_error = std::bind(cb.on_error, this, ph::_1, ph::_2);
-        ep.on_message = std::bind(cb.on_message, this, ph::_1, ph::_2);
+        if(cb.on_open) ep.on_open = std::bind(cb.on_open, this, ph::_1);
+        if(cb.on_close) ep.on_close = std::bind(cb.on_close, this, ph::_1, ph::_2, ph::_3);
+        if(cb.on_error) ep.on_error = std::bind(cb.on_error, this, ph::_1, ph::_2);
+        if(cb.on_message) ep.on_message = std::bind(cb.on_message, this, ph::_1, ph::_2);
         return std::move(*this);
     }
     void ws_broadcast(std::string ep, std::string msg)
@@ -366,12 +373,12 @@ public:
         for (auto &a_connection : cpp_channel_endpoint.get_connections())
             a_connection->send(msg);
     }
-    App&& cron_job(std::function<void(App*)> cb, int seconds = 1, int repeat = 1)
+    App&& cron_job(std::function<void(App*)> cb, bpt::time_duration d = bpt::seconds(1), int repeat = 1)
     {
         std::make_shared<Timer>(
 				*server_.inner_io(),
 				std::bind(cb, this),
-				seconds,
+				d,
                 repeat
 			)->wait();
         return std::move(*this);

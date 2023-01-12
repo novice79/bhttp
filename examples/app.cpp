@@ -31,11 +31,26 @@ int main(int argc, char **argv)
     // curl -X DELETE https://127.0.0.1:9999/delete
     .del("^/delete$", [](auto* app, auto res, auto req){
         res->write( "test delete endpoint" );
+        // schedule notifying all ws clients of "another" endpoints after five seconds
+        app->cron_job([](auto* app){
+                app->ws_broadcast("^/another$", "something deleted five seconds ago"); 
+            }, 
+            // can be: 
+            // bpt::hours bpt::minutes bpt::seconds 
+            // bpt::milliseconds bpt::microseconds bpt::nanoseconds
+            // default: once
+            bpt::seconds(5)
+        );
     })
+    // this endpoint just for notification 
+    // url: "wss://localhost:9999/another"
+    .ws("^/another$", {})
     // url: "wss://localhost:9999/hello"
     .ws("^/hello$", {
         .on_open = [](auto* app, auto conn){
             printf("wss received new connection\n");
+            // notify another ep clients
+            app->ws_broadcast("^/another$", "new connection to hello ws ep"); 
         },
         .on_close = [](auto* app, auto conn, auto status, auto reason){
             printf("wss connection closed\n");
@@ -77,13 +92,10 @@ int main(int argc, char **argv)
             ptree pt;
             read_json(req->content, pt);
             auto name = pt.get<string>("firstName") + " " + pt.get<string>("lastName");
-            *res << "HTTP/1.1 200 OK\r\n"
-                        << "Content-Length: " << name.length() << "\r\n\r\n"
-                        << name;
+            res->write("your name: " + name);
         }
-            catch(const exception &e) {
-            *res << "HTTP/1.1 400 Bad Request\r\nContent-Length: " << strlen(e.what()) << "\r\n\r\n"
-                        << e.what();
+        catch(const exception &e) {
+            res->write(SimpleWeb::StatusCode::client_error_bad_request, e.what());
         }
     })
     // url: "ws://localhost:8888/ws"
@@ -104,13 +116,17 @@ int main(int argc, char **argv)
         }
     })
     .cron_job([](auto* app){
-      printf("test cron job every two seconds 3 times\n");  
-    }, 2, 3)
+      printf("%s: test cron job every two seconds 3 times\n", Util::cur_time().c_str());  
+    }, bpt::seconds(2), 3)
     .cron_job([](auto* app){
-    //   printf("run cron job every four seconds forever\n");  
-        // parameters: 1. ws endpoint[regex string], 2. msg to be sent
-        app->ws_broadcast("^/ws$", Util::cur_time() + ": this msg to every client every four seconds");
-    }, 4, 0)
+        //   printf("run cron job every four seconds forever\n");  
+            // parameters: 1. ws endpoint[regex string], 2. msg to be sent
+            app->ws_broadcast("^/ws$", Util::cur_time() + ": this msg to every client every four seconds");
+        }, 
+        bpt::seconds(4), 
+        // schedule count. less than or equal zero, means: forever
+        0
+    )
     .listen(8888).run();
     return 0;
 }
