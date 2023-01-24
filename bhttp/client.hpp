@@ -32,13 +32,25 @@ public:
     {
     }
     void req(std::string method, 
-        std::function<void(std::shared_ptr<typename T::Response>, const error_code &)> && cb)
+            std::function<void(std::shared_ptr<typename T::Response>, const error_code &)> cb,
+            bool detached = true
+         )
     {
         auto self(this->shared_from_this());
-        client_->request(method, path_, content_, cb);
+        client_->request(method, path_, content_, std::move(cb) );
+        if(detached)
+        {
+            std::thread( std::bind(&HttpCli::run, self) ).detach();
+        }
+        else
+        {
+            run();
+        }
+    }
+    void run()
+    {
         client_->io_service->run();
     }
-
 };
 
 struct WsCnn
@@ -57,6 +69,7 @@ template <typename T>
 class WsCli : public std::enable_shared_from_this<WsCli<T>>
 {
     std::shared_ptr<T> client_;
+    WSCB cb_;
     struct WsCnnWrapper : WsCnn
     {     
         WsCnnWrapper(std::shared_ptr<typename T::Connection> cnn)
@@ -74,48 +87,62 @@ class WsCli : public std::enable_shared_from_this<WsCli<T>>
         std::shared_ptr<typename T::Connection> cnn_;
     };
 public:
-    WsCli(std::string url)
-    :client_(std::make_shared<T>(url))
+    WsCli(std::string url, WSCB &&cb)
+    :client_(std::make_shared<T>(url)), cb_(std::move(cb))
     {
         // printf("url=%s\n", url.c_str() );
     }
-    void req(WSCB &&cb)
+    // ~WsCli()
+    // {
+    //     printf("~WsCli()\n");
+    // }
+    void req(bool detached = true)
     {
         auto self(this->shared_from_this());
-        client_->on_open = [&cb](std::shared_ptr<typename T::Connection> cnn) 
+        client_->on_open = [this](std::shared_ptr<typename T::Connection> cnn) 
         {
-            if(cb.on_open)
+            if(cb_.on_open)
             {
                 WsCnnWrapper wsr(cnn);
-                cb.on_open(&wsr);
+                cb_.on_open(&wsr);
             }
         };
-        client_->on_close = [&cb](std::shared_ptr<typename T::Connection> cnn, int status, const string &reason) 
+        client_->on_close = [this](std::shared_ptr<typename T::Connection> cnn, int status, const string &reason) 
         {
-            if(cb.on_close)
+            if(cb_.on_close)
             {
                 WsCnnWrapper wsr(cnn);
-                cb.on_close(&wsr, status, reason);
+                cb_.on_close(&wsr, status, reason);
             }
         };
-        client_->on_error = [&cb](std::shared_ptr<typename T::Connection> cnn, const SimpleWeb::error_code &ec) 
+        client_->on_error = [this](std::shared_ptr<typename T::Connection> cnn, const SimpleWeb::error_code &ec) 
         {
-            if(cb.on_error)
+            if(cb_.on_error)
             {
                 WsCnnWrapper wsr(cnn);
-                cb.on_error(&wsr, ec);
+                cb_.on_error(&wsr, ec);
             }
         };
-        client_->on_message = [&cb](std::shared_ptr<typename T::Connection> cnn, 
+        client_->on_message = [this](std::shared_ptr<typename T::Connection> cnn, 
                                  std::shared_ptr<typename T::InMessage> in_message) 
         {
-            if(cb.on_message)
+            if(cb_.on_message)
             {
                 WsCnnWrapper wsr(cnn);
-                cb.on_message(&wsr, in_message->string());
+                cb_.on_message(&wsr, in_message->string());
             }
         };
-
+        if(detached)
+        {
+            std::thread( std::bind(&WsCli::run, self) ).detach();
+        }
+        else
+        {
+            run();
+        }
+    }
+    void run()
+    {
         client_->start();
     }
 };
@@ -138,13 +165,14 @@ namespace bhttp
         if( path.empty() ) path = "/";
         return {0, proto, addr, path};
     }
-
+    
     static int fetch(
         std::string method, 
         std::string url, 
         std::string content, 
         SimpleWeb::CaseInsensitiveMultimap header,
-        auto cb
+        auto cb,
+        bool detached = true
     )
     {
         auto [ec, proto, addr, path] = parse_url(url);
@@ -157,7 +185,7 @@ namespace bhttp
                     addr,
                     std::move(path),
                     std::move(content)
-                )->req(method, cb);
+                )->req(method, std::move(cb), detached);
                 break;
             }
             if("https" == proto)
@@ -166,7 +194,7 @@ namespace bhttp
                     addr,
                     std::move(path),
                     std::move(content)
-                )->req(method, cb);
+                )->req(method, std::move(cb), detached);
                 break;
             }
             return -1;
@@ -178,15 +206,97 @@ namespace bhttp
         std::string method, 
         std::string url, 
         std::string content, 
-        auto cb
+        auto cb,
+        bool detached = true
     )
     {
-        return fetch(method, url, content, {}, std::move(cb) );
+        return fetch(method, url, content, {}, std::move(cb), detached );
     }
-    
+    inline int get(std::string url, 
+        std::string content, 
+        SimpleWeb::CaseInsensitiveMultimap header,
+        auto cb,
+        bool detached = true
+    ){return fetch("GET", std::move(url), std::move(content), std::move(header), std::move(cb), detached);}
+    inline int get(std::string url, auto cb, bool detached = true)
+    {return get(std::move(url), "", {}, std::move(cb), detached);}
+
+    inline int post(std::string url, 
+        std::string content, 
+        SimpleWeb::CaseInsensitiveMultimap header,
+        auto cb,
+        bool detached = true
+    ){return fetch("POST", std::move(url), std::move(content), std::move(header), std::move(cb), detached);}
+    inline int post(std::string url, std::string content, auto cb, bool detached = true)
+    {return post(std::move(url), std::move(content), {}, std::move(cb), detached);}
+
+    inline int options(std::string url, 
+        std::string content, 
+        SimpleWeb::CaseInsensitiveMultimap header,
+        auto cb,
+        bool detached = true
+    ){return fetch("OPTIONS", std::move(url), std::move(content), std::move(header), std::move(cb), detached);}
+    inline int options(std::string url, std::string content, auto cb, bool detached = true)
+    {return options(std::move(url), std::move(content), {}, std::move(cb), detached);}
+
+    inline int del(std::string url, 
+        std::string content, 
+        SimpleWeb::CaseInsensitiveMultimap header,
+        auto cb,
+        bool detached = true
+    ){return fetch("DELETE", std::move(url), std::move(content), std::move(header), std::move(cb), detached);}
+    inline int del(std::string url, std::string content, auto cb, bool detached = true)
+    {return del(std::move(url), std::move(content), {}, std::move(cb), detached);}
+
+    inline int patch(std::string url, 
+        std::string content, 
+        SimpleWeb::CaseInsensitiveMultimap header,
+        auto cb,
+        bool detached = true
+    ){return fetch("PATCH", std::move(url), std::move(content), std::move(header), std::move(cb), detached);}
+    inline int patch(std::string url, std::string content, auto cb, bool detached = true)
+    {return patch(std::move(url), std::move(content), {}, std::move(cb), detached);}
+
+    inline int put(std::string url, 
+        std::string content, 
+        SimpleWeb::CaseInsensitiveMultimap header,
+        auto cb,
+        bool detached = true
+    ){return fetch("PUT", std::move(url), std::move(content), std::move(header), std::move(cb), detached);}
+    inline int put(std::string url, std::string content, auto cb, bool detached = true)
+    {return put(std::move(url), std::move(content), {}, std::move(cb), detached);}
+
+    inline int head(std::string url, 
+        std::string content, 
+        SimpleWeb::CaseInsensitiveMultimap header,
+        auto cb,
+        bool detached = true
+    ){return fetch("HEAD", std::move(url), std::move(content), std::move(header), std::move(cb), detached);}
+    inline int head(std::string url, std::string content, auto cb, bool detached = true)
+    {return head(std::move(url), std::move(content), {}, std::move(cb), detached);}
+
+    inline int connect(std::string url, 
+        std::string content, 
+        SimpleWeb::CaseInsensitiveMultimap header,
+        auto cb,
+        bool detached = true
+    ){return fetch("CONNECT", std::move(url), std::move(content), std::move(header), std::move(cb), detached);}
+    inline int connect(std::string url, std::string content, auto cb, bool detached = true)
+    {return connect(std::move(url), std::move(content), {}, std::move(cb), detached);}
+
+    inline int trace(std::string url, 
+        std::string content, 
+        SimpleWeb::CaseInsensitiveMultimap header,
+        auto cb,
+        bool detached = true
+    ){return fetch("TRACE", std::move(url), std::move(content), std::move(header), std::move(cb), detached);}
+    inline int trace(std::string url, std::string content, auto cb, bool detached = true)
+    {return trace(std::move(url), std::move(content), {}, std::move(cb), detached);}
+
     static int ws(
         std::string url, 
-        WSCB &&cb
+        WSCB &&cb,
+        bool detached = true
     )
     {
         auto [ec, proto, addr, path] = parse_url(url);
@@ -195,12 +305,12 @@ namespace bhttp
         {
             if("ws" == proto)
             {
-                std::make_shared<WsCli<WsClient>>( addr+path )->req( std::move(cb) );
+                std::make_shared<WsCli<WsClient>>( addr+path, std::move(cb) )->req( detached );
                 break;
             }
             if("wss" == proto)
             {
-                std::make_shared<WsCli<WssClient>>( addr+path )->req( std::move(cb) );
+                std::make_shared<WsCli<WssClient>>( addr+path, std::move(cb) )->req( detached );
                 break;
             }
             return -1;

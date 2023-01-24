@@ -1,4 +1,5 @@
 #include <bhttp/app.hpp>
+#include <bhttp/client.hpp>
 // for json-example
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -78,7 +79,14 @@ int main(int argc, char **argv)
     .serve_dir("/store", Util::exe_path(argv[0]) / "store")
     // curl http://127.0.0.1:8888/info
     .get("^/info$", [](auto* app, auto res, auto req){
-        res->write("C++ boost http server");
+        // get data from another https server, and then return it to client
+        bhttp::get("https://127.0.0.1:9999",
+        [outer_res=res](auto res, const SimpleWeb::error_code &ec) {
+        if(!ec)
+            cout << "Response content: " << res->content.string() << endl;
+            outer_res->write(res->content.string());
+        });
+        // res->write("C++ boost http server ");
     })
     // curl http://127.0.0.1:8888/match/123444
     .get("^/match/([0-9]+)$", [](auto* app, auto res, auto req){
