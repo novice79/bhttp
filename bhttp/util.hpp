@@ -4,6 +4,9 @@
 #include <algorithm>
 #include <iterator>
 #include <string>
+#include <variant>
+#include <tuple>
+#include <any>
 #include <stdexcept>
 #include <iomanip>
 #include <regex>
@@ -20,6 +23,7 @@
 #include <ctime>
 
 #include <boost/asio.hpp>
+#include <boost/json.hpp>
 #include <boost/format.hpp>
 #include <boost/convert/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
@@ -35,10 +39,22 @@
 namespace bp = boost::process;
 namespace pt = boost::property_tree;
 namespace fs = boost::filesystem;
+
+#include <lua.hpp>
+#include <sol/sol.hpp>
 using namespace std;
 
 struct Util
 {
+	static void test_lua(fs::path lua_file)
+	{
+		sol::state lua;
+		// open some common libraries
+		lua.open_libraries();
+		// lua.script("print('bark bark bark!')");
+		lua.script_file(lua_file.string());
+		std::cout << std::endl;
+	}
 	static fs::path exe_path(fs::path argv0)
 	{
 		auto path = fs::canonical(fs::path(argv0).remove_filename());
