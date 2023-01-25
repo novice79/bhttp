@@ -14,3 +14,7 @@ git restore --source lua -- build.sh
 git show lua:bhttp/client_wss.hpp > bhttp/client_wss.hpp
 git show lua:bhttp/client_https.hpp > bhttp/client_https.hpp
 git diff ..lua -- bhttp/client_https.hpp
+
+<!-- show node file size -->
+echo $(($(wc -c $(which node) | awk '{ print $1 }')/1024/1024))M
+ll $(realpath `which node`)
