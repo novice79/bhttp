@@ -29,17 +29,14 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
-#include <boost/property_tree/ptree.hpp> 
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/process.hpp>
 namespace bp = boost::process;
-namespace pt = boost::property_tree;
 namespace fs = boost::filesystem;
-
+namespace json = boost::json;
 #include <lua.hpp>
 #include <sol/sol.hpp>
 using namespace std;
@@ -183,16 +180,10 @@ struct Util
 		}();
 		return iequals(ext, ".pac");
 	}
-	static std::string to_json(std::map <std::string, std::string> data)
+	// standard containers(std::map, std::vector, ...) to json string
+	static std::string to_json(auto data)
 	{
-		pt::ptree json;
-		for( auto const& [key, val] : data )
-		{
-			json.put(key, val);
-		}
-		stringstream ss;
-		pt::write_json(ss, json);
-		return ss.str();
+		return json::serialize( json::value_from(data) );
 	}
 	static std::string mime_type(const std::string &path)
 	{

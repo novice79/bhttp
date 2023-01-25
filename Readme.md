@@ -18,7 +18,9 @@ P.S. please refer to app.cpp/cli.cpp in examples dir
 
 # Dependence
 
-- boost
-- openssl
+- [boost](https://github.com/boostorg/boost)
+- [openssl](https://github.com/openssl/openssl)
+- [lua](https://github.com/lua/lua)
+- [sol2](https://github.com/ThePhD/sol2)
 
 

@@ -10,7 +10,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 endif()
 # include_directories(${CMAKE_SOURCE_DIR})
-file(GLOB SOURCE_FILES  "*.cpp")
+file(GLOB_RECURSE SOURCE_FILES  "*.cpp")
 foreach(file ${SOURCE_FILES})
     # DIRECTORY = Directory without file name
     # NAME      = File name without directory
