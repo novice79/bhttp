@@ -1,10 +1,7 @@
 #include <bhttp/app.hpp>
-// for json-example
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
-using namespace boost::property_tree;
-#include <sstream>
-#include <boost/format.hpp>
+#include <bhttp/client.hpp>
+
+
 using namespace std;
 using boost::format;
 int main(int argc, char **argv) 
@@ -19,8 +16,21 @@ int main(int argc, char **argv)
         stringstream s;
         s << "C++ boost https server, handled by thread: ";
         s << std::this_thread::get_id();
-        cout<< s.str() << endl;
-        res->write( s.str() );
+        s << "<br><h1>Request from " << req->remote_endpoint().address().to_string() << ":" << req->remote_endpoint().port() << "</h1>";
+        s << req->method << " " << req->path << " HTTP/" << req->http_version;
+        s << "<h2>Query Fields</h2>";
+        auto query_fields = req->parse_query_string();
+        for(auto &field : query_fields)
+        s << field.first << ": " << field.second << "<br>";
+        s << "<h2>Header Fields</h2>";
+        for(auto &field : req->header)
+        s << field.first << ": " << field.second << "<br>";
+        // cout<< s.str() << endl;
+        // SimpleWeb::CaseInsensitiveMultimap header;
+        // header.emplace("Content-Type", "text/html;charset=utf-8");
+        // header.emplace("Connection", "keep-alive");
+        // res->write(s, header);
+        res->write(s, {{"Content-Type","text/html;charset=utf-8"}});
     })
     // curl -X PUT https://127.0.0.1:9999/update
     .put("^/update$", [](auto* app, auto res, auto req){
@@ -78,7 +88,14 @@ int main(int argc, char **argv)
     .serve_dir("/store", Util::exe_path(argv[0]) / "store")
     // curl http://127.0.0.1:8888/info
     .get("^/info$", [](auto* app, auto res, auto req){
-        res->write("C++ boost http server");
+        // get data from another https server, and then return it to client
+        bhttp::get("https://127.0.0.1:9999/info",
+        [outer_res=res](auto res, const SimpleWeb::error_code &ec) {
+        if(!ec)
+            cout << "Response content: " << res->content.string() << endl;
+            outer_res->write(res->content.string(), res->header);
+        });
+        // res->write("C++ boost http server ");
     })
     // curl http://127.0.0.1:8888/match/123444
     .get("^/match/([0-9]+)$", [](auto* app, auto res, auto req){
@@ -86,13 +103,20 @@ int main(int argc, char **argv)
     })
     // curl -X POST http://127.0.0.1:8888/json \
     // -H 'Content-Type: application/json' \
-    // -d '{"firstName":"John","lastName":"Smith","age":"43"}'
+    // -d '{"firstName":"John","lastName":"Smith","age":43}'
     .post("^/json$", [](auto* app, auto res, auto req){
         try {
-            ptree pt;
-            read_json(req->content, pt);
-            auto name = pt.get<string>("firstName") + " " + pt.get<string>("lastName");
-            res->write("your name: " + name);
+            auto data = json::parse(req->content.string());
+            char buf[256] = {0};
+            sprintf(buf, "your name is [%s %s], and your age is [%lld]",
+                data.at("firstName").as_string().c_str(),
+                data.at("lastName").as_string().c_str(),
+                data.at("age").as_int64()
+            );
+            // or convert to std::string
+            // auto full_name = json::value_to<std::string>( data.at("firstName") ); 
+            // full_name += " " + json::value_to<std::string>( data.at("lastName") );
+            res->write(buf);
         }
         catch(const exception &e) {
             res->write(SimpleWeb::StatusCode::client_error_bad_request, e.what());

@@ -20,7 +20,7 @@ namespace SimpleWeb {
      * @param private_key_file   If non-empty, specifies the file containing the private key for certification_file. Requires certification_file.
      * @param verify_file        If non-empty, use this certificate authority file to perform verification.
      */
-    SocketClient(const std::string &server_port_path, bool verify_certificate = true,
+    SocketClient(const std::string &server_port_path, bool verify_certificate = false,
                  const std::string &certification_file = std::string(), const std::string &private_key_file = std::string(),
                  const std::string &verify_file = std::string())
         : SocketClientBase<WSS>::SocketClientBase(server_port_path, 443),
