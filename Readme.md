@@ -16,9 +16,9 @@ Intergrate the two libs above mentioned, and distill some simple api for:
 
 P.S. please refer to app.cpp/cli.cpp in examples dir
 
-# Dependence
+# Dependencies
 
-- [boost](https://github.com/boostorg/boost)
+- [boost](https://github.com/boostorg/boost) :: asio, json, filesystem
 - [openssl](https://github.com/openssl/openssl)
 
 

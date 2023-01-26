@@ -161,7 +161,10 @@ namespace bhttp
         std::string proto = sm[1].str();
         std::string addr = sm[2].str();
         std::string path = sm[3].str();
-        if( !std::regex_match(addr, sm, s_with_port_re) ) addr += ":80";
+        if( !std::regex_match(addr, sm, s_with_port_re) ) 
+        {
+            if("https" == proto || "wss" == proto) addr += ":443"; else addr += ":80";
+        }
         if( path.empty() ) path = "/";
         return {0, proto, addr, path};
     }

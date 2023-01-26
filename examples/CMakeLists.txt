@@ -31,16 +31,16 @@ set(Boost_USE_MULTITHREADED      ON)
 # set(Boost_USE_STATIC_RUNTIME    OFF)
 
 find_package(Boost 1.79.0 REQUIRED COMPONENTS 
-    date_time 
+    # date_time 
     filesystem 
-    serialization
-    atomic 
+    # serialization
+    # atomic 
     json
-    log_setup 
-    log 
-    program_options
+    # log_setup 
+    # log 
+    # program_options
     system 
-    locale 
+    # locale 
 )
 
 # set(OPENSSL_USE_STATIC_LIBS TRUE)
