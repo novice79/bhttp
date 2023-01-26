@@ -16,7 +16,7 @@ Intergrate the two libs above mentioned, and distill some simple api for:
 
 P.S. please refer to app.cpp/cli.cpp in examples dir
 
-# Dependence
+# Dependencies
 
 - [boost](https://github.com/boostorg/boost)
 - [openssl](https://github.com/openssl/openssl)
