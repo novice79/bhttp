@@ -3,12 +3,22 @@
 set -e 
 
 dir="_build"
-[[ "$#" -gt 0 ]] && rm -rf $dir
-
+PREFIX=${prefix:-dist}
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -prefix=* | --PREFIX=* | prefix=* | PREFIX=*)
+      PREFIX="${1#*=}"
+      ;;
+    *)
+      printf "remove $dir for clean build\n"
+      rm -rf $dir
+  esac
+  shift
+done
 # build http lib
 cmake -GNinja -H"bhttp" -B"$dir/lib" \
 -DCMAKE_FIND_ROOT_PATH="$HOME/clib-prebuilt/macos" \
--DCMAKE_INSTALL_PREFIX=dist \
+-DCMAKE_INSTALL_PREFIX=$PREFIX \
 -DCMAKE_BUILD_TYPE=Release 
 
 cmake --build "$dir/lib"
@@ -16,7 +26,7 @@ cmake --install "$dir/lib"
 
 # build example exe
 cmake -GNinja -H"examples" -B$dir \
--DCMAKE_FIND_ROOT_PATH="$HOME/clib-prebuilt/macos;$PWD/dist" \
+-DCMAKE_FIND_ROOT_PATH="$HOME/clib-prebuilt/macos;$PREFIX" \
 -DCMAKE_INSTALL_PREFIX=dist \
 -DCMAKE_BUILD_TYPE=Release 
 
