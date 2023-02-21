@@ -9,6 +9,7 @@ set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 endif()
+
 # include_directories(${CMAKE_SOURCE_DIR})
 file(GLOB_RECURSE SOURCE_FILES  "*.cpp")
 foreach(file ${SOURCE_FILES})
@@ -19,8 +20,28 @@ foreach(file ${SOURCE_FILES})
     # LAST_EXT  = File name last extension (.c from d/a.b.c)
     # NAME_WLE  = File name with neither the directory nor the last extension
     get_filename_component(name "${file}" NAME_WE)
-    add_executable(${name} "${file}")
+    add_executable(${name} "${file}" "android/miss_unwind.c")
     list(APPEND targets ${name})
+    if(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
+        set_target_properties(${name} PROPERTIES
+            BUNDLE True
+            MACOSX_BUNDLE_GUI_IDENTIFIER piaoyun.dev.${name}
+            MACOSX_BUNDLE_BUNDLE_NAME ${name}
+            MACOSX_BUNDLE_BUNDLE_VERSION "0.1"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "0.1"
+            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/../misc/customtemplate.plist.in
+        )
+        # This little macro lets you set any XCode specific property
+        macro (set_xcode_property TARGET XCODE_PROPERTY XCODE_VALUE)
+            set_property (TARGET ${TARGET} PROPERTY XCODE_ATTRIBUTE_${XCODE_PROPERTY} ${XCODE_VALUE})
+        endmacro (set_xcode_property)
+        macro (unset_xcode_property TARGET XCODE_PROPERTY)
+        set_property (TARGET ${TARGET} PROPERTY XCODE_ATTRIBUTE_${XCODE_PROPERTY})
+        endmacro (unset_xcode_property)
+        set_xcode_property(${name} CODE_SIGN_IDENTITY "iPhone Developer")
+        # grep DEVELOPMENT_TEAM _build_ios/main.xcodeproj/project.pbxproj
+        set_xcode_property(${name} DEVELOPMENT_TEAM W8L2TKP6RD)
+    endif()
 endforeach()
 
 # message(FATAL_ERROR "You can not do this at all, CMake will exit." )
@@ -38,9 +59,7 @@ find_package(Boost 1.79.0 REQUIRED COMPONENTS
     json
     log_setup 
     log 
-    program_options
     system 
-    locale 
 )
 
 # set(OPENSSL_USE_STATIC_LIBS TRUE)
@@ -51,16 +70,21 @@ message("OPENSSL_LIBRARIES=${OPENSSL_LIBRARIES}")
 # sudo apt-get install libz-dev
 # find_package(ZLIB REQUIRED)
 # message("ZLIB_LIBRARIES=${ZLIB_LIBRARIES}")
-find_package(Lua REQUIRED)
-message("LUA_INCLUDE_DIR=${LUA_INCLUDE_DIR}")
-message("LUA_LIBRARIES=${LUA_LIBRARIES}")
-include_directories(${LUA_INCLUDE_DIR})
+find_package(pyu 1.0.0 REQUIRED)
+get_target_property(pyu_INCLUDE_DIRS pyu::pyu INTERFACE_INCLUDE_DIRECTORIES )
+message("pyu_INCLUDE_DIRS=${pyu_INCLUDE_DIRS}")
+get_target_property(pyu_LIBRARIES pyu::pyu IMPORTED_LOCATION_RELEASE )
+message("pyu_LIBRARIES=${pyu_LIBRARIES}")
+message("pyu_VERSION=${pyu_VERSION}")
+include_directories(${pyu_INCLUDE_DIRS})
 
-find_path(bhttp_headers "bhttp/server_http.hpp")
-if(NOT bhttp_headers)
-  message(FATAL_ERROR "Can't find folder containing bhttp/server_http.hpp")
-endif()
-include_directories(${bhttp_headers})
+find_package(bhttp REQUIRED)
+get_target_property(bhttp_INCLUDE_DIRS bhttp::bhttp INTERFACE_INCLUDE_DIRECTORIES )
+message("bhttp_INCLUDE_DIRS=${bhttp_INCLUDE_DIRS}")
+get_target_property(bhttp_LIBRARIES bhttp::bhttp IMPORTED_LOCATION_RELEASE )
+message("bhttp_LIBRARIES=${bhttp_LIBRARIES}")
+message("bhttp_VERSION=${bhttp_VERSION}")
+include_directories(${bhttp_INCLUDE_DIRS})
 foreach(t ${targets})
     target_link_libraries(
         ${t} 
@@ -68,13 +92,18 @@ foreach(t ${targets})
         ${OPENSSL_LIBRARIES}
         # ${ZLIB_LIBRARIES}
         # ZLIB::ZLIB
+        bhttp::bhttp
         ${LUA_LIBRARIES}
         ${CMAKE_DL_LIBS} 
     )
     if(WIN32)
         target_link_libraries(${t} ws2_32 wsock32)
     endif()
-    install(TARGETS ${t} RUNTIME DESTINATION bin)
+    if(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
+        install(TARGETS ${t} BUNDLE DESTINATION bin)
+    else()
+        install(TARGETS ${t} RUNTIME DESTINATION bin)
+    endif()
 endforeach()
 
 

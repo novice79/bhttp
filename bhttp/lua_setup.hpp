@@ -1,7 +1,7 @@
 #pragma once
 #include <boost/filesystem.hpp>
-// #include <lua.hpp>
-#include <sol/sol.hpp>
+
+#include <pyu/pyu.h>
 
 #include "app.hpp"
 #include "client.hpp"

@@ -20,7 +20,11 @@ P.S. please refer to app.cpp/cli.cpp in examples dir
 
 - [boost](https://github.com/boostorg/boost)
 - [openssl](https://github.com/openssl/openssl)
-- [lua](https://github.com/lua/lua)
-- [sol2](https://github.com/ThePhD/sol2)
+- [pyu](https://github.com/novice79/pyu)
 
+
+# Branch specific feature
+
+pro stand for progressing (not professional) branch, 
+as it will gradually incorporate various usefull libs
 

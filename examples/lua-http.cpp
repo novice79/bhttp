@@ -1,5 +1,4 @@
 
-#include <bhttp/util.hpp>
 #include <bhttp/lua_setup.hpp>
 int main(int argc, char **argv) 
 {
