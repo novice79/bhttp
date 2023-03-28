@@ -59,6 +59,7 @@ find_package(Boost 1.79.0 REQUIRED COMPONENTS
     json
     log_setup 
     log 
+    program_options
     system 
 )
 
@@ -93,7 +94,6 @@ foreach(t ${targets})
         # ${ZLIB_LIBRARIES}
         # ZLIB::ZLIB
         bhttp::bhttp
-        ${LUA_LIBRARIES}
         ${CMAKE_DL_LIBS} 
     )
     if(WIN32)

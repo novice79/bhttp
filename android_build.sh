@@ -3,7 +3,7 @@ set -e
 # set -x
 
 scirptName=$0
-
+dir=_build/android_*
 example_prefix="dist/android"
 lib_prefix=${prefix:-$example_prefix}
 while [ $# -gt 0 ]; do

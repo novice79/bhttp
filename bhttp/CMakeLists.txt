@@ -20,6 +20,7 @@ find_package(Boost 1.79.0 REQUIRED COMPONENTS
     json
     log_setup 
     log 
+    program_options
     system 
 )
 # include_directories(${Boost_INCLUDE_DIRS})
