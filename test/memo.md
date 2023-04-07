@@ -1,4 +1,8 @@
 npm create vite@latest spa -- --template react
+<!-- before 164K    dist/bin/www -->
+npm i lodash jotai uuid buffer -S
+npm install @mui/material @emotion/react @emotion/styled @mui/icons-material @fontsource/roboto -S
+<!-- after 732K    dist/bin/www -->
 <!-- merge from branch lua. some git commands memo -->
 <!-- do not use checkout from another branch, cause it will auto staged
 git checkout lua -- bhttp/client.hpp

@@ -2,15 +2,17 @@ cmake_minimum_required(VERSION 3.20)
 
 project(test)
 
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 # use all static lib
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 endif()
 # include_directories(${CMAKE_SOURCE_DIR})
-file(GLOB_RECURSE SOURCE_FILES  "*.cpp")
+file(GLOB SOURCE_FILES  "*.cpp")
+
 foreach(file ${SOURCE_FILES})
     # DIRECTORY = Directory without file name
     # NAME      = File name without directory

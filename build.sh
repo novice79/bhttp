@@ -41,8 +41,8 @@ echo "hello world from store dir static index.html file" > $PWD/dist/bin/store/i
 cd test/spa && npm i && npm run build
 cd -
 # run example exe
-printf "\nFYI:\n"
-echo "please run: ./dist/bin/app"
+printf "\nFor test:\n"
+echo "run: ./dist/bin/app"
 echo "and then use browser open http://localhost:8888/ to test spa"
 echo "or use curl -X PUT ... to test restfull endpoint"
 echo "and then run: ./dist/bin/cli to test client api"

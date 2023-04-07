@@ -33,8 +33,7 @@
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/process.hpp>
-namespace bp = boost::process;
+
 namespace fs = boost::filesystem;
 namespace json = boost::json;
 
@@ -175,6 +174,7 @@ struct Util
 	{
 		return json::serialize( json::value_from(data) );
 	}
+	
 	static std::string mime_type(const std::string &path)
 	{
 		using boost::iequals;
@@ -212,6 +212,53 @@ struct Util
 		// return file_type(path);
 		return "application/octet-stream";
 	}
+	static json::array file_info(fs::path p)
+    {	
+        json::array fi_array;
+        if( !fs::exists(p) ) return fi_array;
+        std::vector<fs::path> v;
+        if( fs::is_directory(p) )
+        {
+            for (auto &&x : fs::directory_iterator(p))
+                v.push_back(x.path());
+        }
+        else if( fs::is_regular_file(p) )
+        {
+            v.push_back(p);
+        }
+        else
+        {
+            return fi_array;
+        }
+        // leave client to sort
+        // std::sort(v.begin(), v.end());
+        for (auto &&x : v)
+        {
+            json::object fi;
+            auto fn = x.filename().string();
+            std::time_t t = fs::last_write_time(x.string());
+            std::tm tm = *std::localtime(&t);
+            std::ostringstream ss;
+            ss << std::put_time(&tm, "%F %T");
+            std::string time_str = ss.str();
+            fi["name"] = fn;
+            fi["time"] = time_str;
+            fi["path"] = x.string();
+            if( fs::is_directory(x) )
+            {
+                fi["type"] = "dir";
+                fi_array.emplace_back(fi);
+                continue;
+            }
+            auto type = mime_type( x.string() );
+            fi["type"] = (!type.empty() ? type : "UNKOWN");
+            fi["size"] = fs::file_size(x);
+            fi["ext"] = x.extension().string();
+            fi_array.emplace_back(fi);
+        }
+        // std::cout<< "fi_array=" << json::serialize(fi_array) << std::endl;
+        return fi_array;
+    }
 	static std::string get_tid()
 	{
 		std::thread::id this_id = std::this_thread::get_id();
