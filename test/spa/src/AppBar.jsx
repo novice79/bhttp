@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import UploadIcon from '@mui/icons-material/Upload';
 import { useAtom } from 'jotai'
 import { uploadAtom, uploadCountAtom } from './atom'
+import SearchBar from './SearchBar'
 import _ from 'lodash'
 import util from "./util";
 export default function IconAppBar() {
@@ -49,21 +50,22 @@ export default function IconAppBar() {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-          <StoreIcon sx={{ paddingRight : 2 }} />
+          <StoreIcon fontSize="large" sx={{ paddingRight : 2 }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Files
           </Typography>
+          <SearchBar/>
           <IconButton
             size="large"
             edge="start"
             color="inherit"
             aria-label="menu"
-            sx={{ mr: 2 }}
+            // sx={{ mr: 1.5 }}
             onClick={()=>{
               inputFileRef.current.click();
             }}
           >
-            <UploadIcon/>
+            <UploadIcon />
           </IconButton>
           {/*  accept="image/*" */}
           <input type="file" multiple

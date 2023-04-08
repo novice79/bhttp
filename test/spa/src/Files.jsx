@@ -1,6 +1,6 @@
 import React from 'react'
 import { useAtom } from 'jotai'
-import { fileAtom } from './atom'
+import { fileAtom, filterAtom } from './atom'
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import { styled } from '@mui/material/styles';
@@ -17,12 +17,15 @@ const Item = styled(Paper)(({ theme }) => ({
 
 export default function Files() {
     const [ files, setFile ] = useAtom(fileAtom)
-    const listItems = files.map( fi =>
+    const [ filterTxt, setFilterTxt ] = useAtom(filterAtom)
+    const listItems = files
+        .filter(fi=>filterTxt? fi.name.includes(filterTxt) && fi : fi)
+        .map( fi =>
         <React.Fragment key={fi.name}>
             <Box sx={{ 
                 width: '100%', 
                 display: 'flex', flexWrap: 'wrap', alignItems: 'center',
-                border: '.5rem groove' }}>
+                border: '.2rem groove' }}>
                 <Box sx={{ width: '60%', overflowWrap: 'break-word' }}>{fi.name}</Box>
                 <Box sx={{ width: '20%', overflowWrap: 'break-word' }}>{util.formatFileSize(fi.size)}</Box>
                 <Box sx={{ 
