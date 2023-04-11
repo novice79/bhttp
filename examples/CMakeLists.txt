@@ -105,7 +105,7 @@ foreach(t ${targets})
         install(TARGETS ${t} RUNTIME DESTINATION bin)
     endif()
 endforeach()
-
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../misc/magic.mgc" DESTINATION bin)
 
 
 

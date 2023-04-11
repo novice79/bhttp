@@ -19,6 +19,7 @@ git checkout lua -- bhttp/client.hpp
 git checkout lua -- bhttp/util.hpp
 git checkout lua -- examples
 git checkout lua -- Readme.md 
+git checkout master -- test/spa/
 -->
 <!-- unstage all: git reset -->
 

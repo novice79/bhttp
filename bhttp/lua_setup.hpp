@@ -1,8 +1,6 @@
 #pragma once
 #include <boost/filesystem.hpp>
 
-#include <pyu/pyu.h>
-
 #include "app.hpp"
 #include "client.hpp"
 

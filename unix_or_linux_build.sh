@@ -54,15 +54,15 @@ cmake --build $dir
 cmake --install $dir
 
 # write static test files
-mkdir -p $PWD/dist/bin/{www,store}
-# echo "hello world from www dir static index.html file" > $PWD/dist/bin/www/index.html
-echo "hello world from store dir static index.html file" > $PWD/dist/bin/store/index.html
+mkdir -p "$PWD/dist/$OSTYPE/bin"/{www,store}
+# echo "hello world from www dir static index.html file" > $PWD/dist/$OSTYPE/bin/www/index.html
+echo "hello world from store dir static index.html file" > $PWD/dist/$OSTYPE/bin/store/index.html
 # cd test && npm create vite@latest spa -- --template react
 cd test/spa && npm i && npm run build
 cd -
 # run example exe
 printf "\nFYI:\n"
 echo "please run: ./dist/$OSTYPE/bin/app"
-echo "and then use browser open http://localhost:8888/ to test spa"
+echo "and then use browser open http://localhost:8888/ or https://127.0.0.1:9999/ to test spa app"
 echo "or use curl -X PUT ... to test restfull endpoint"
 echo "and then run: ./dist/$OSTYPE/bin/cli to test client api"

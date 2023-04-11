@@ -1,10 +1,10 @@
 #pragma once
-
+#include <pyu/pyu.h>
 #include "server_ws.hpp"
 #include "server_http.hpp"
 #include "server_https.hpp"
 #include "server_wss.hpp"
-
+#include "upload_handler.hpp"
 #include "util.hpp"
 namespace ph = std::placeholders;
 namespace bpt = boost::posix_time;
@@ -59,6 +59,19 @@ class App
     WsServer ws_;
     HttpServer server_;
 public:
+    struct Paths
+    {
+        // log_path is dir of log files
+        fs::path log_path;
+        // db_path is full db file path
+        fs::path db_path;
+        // magic_path is full magic.mgc file path
+        fs::path magic_path;
+    };
+    std::shared_ptr<Log> logger;
+    std::shared_ptr<DB> db;
+    std::shared_ptr<FileMgr> fm;
+public:
     struct WSCB
     {
         std::function<void(App*, std::shared_ptr<typename WsServer::Connection>) > on_open;
@@ -70,15 +83,48 @@ public:
     App &  operator= ( App && ) = default;
     App ( const App & ) = delete;
     App & operator= ( const App & ) = delete;
-    App()
+    App(Paths&& p)
+    :logger(pyu::create_logger(p.log_path)),
+    db(pyu::create_db(p.db_path)),
+    fm(pyu::create_fm(p.magic_path))
     {emplace_ws();}
-    App(std::string crt, std::string key)
-    :server_(crt, key),ws_(crt, key)
+    App(std::string crt, std::string key, Paths&& p)
+    :server_(crt, key),ws_(crt, key),
+    logger(pyu::create_logger(p.log_path)),
+    db(pyu::create_db(p.db_path)),
+    fm(pyu::create_fm(p.magic_path))
     {emplace_ws();}
     ~App()
     {
         printf("~App()\n");
         server_.stop();
+    }
+    App&& use(std::function<void(App*)> doer)
+    {   
+        doer(this);
+        return std::move(*this);
+    }
+    App&& upload(std::string vp, fs::path dir, std::function<void(App*)> cb = nullptr)
+    {
+        this->post(vp, [dir=std::move(dir), cb=std::move(cb), this](auto* app, auto res, auto req)
+        {
+            static UploadHandler uh( std::move(dir), std::bind(cb, this) );
+            static SimpleWeb::CaseInsensitiveMultimap header
+            {
+                {"Content-Type", "text/plain; charset=utf-8"},
+                {"Access-Control-Allow-Origin", "*"}
+            };
+            int ret = uh.write( req->content.string() );
+            if( 0 == ret)
+            {
+                res->write(SimpleWeb::StatusCode::success_ok, header);
+            }
+            else
+            {
+                res->write(SimpleWeb::StatusCode::client_error_bad_request, header);
+            }
+        });    
+        return std::move(*this);
     }
     App&& serve_dir(std::string vp, fs::path dir)
     {
@@ -239,6 +285,30 @@ public:
                 FileSvr::serve(res, req, path);
             };
         }
+        return std::move(*this);
+    }
+    App&& cors()
+    {
+        // Deals with CORS requests
+        server_.default_resource["OPTIONS"] = [](
+            std::shared_ptr<typename HttpServer::Response> res, 
+            std::shared_ptr<typename HttpServer::Request> req) 
+        {
+            try {
+                // Set header fields
+                SimpleWeb::CaseInsensitiveMultimap header;
+                header.emplace("Content-Type", "text/plain; charset=utf-8");
+                header.emplace("Access-Control-Allow-Origin", "*");
+                header.emplace("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+                header.emplace("Access-Control-Max-Age", "1728000");
+                header.emplace("Access-Control-Allow-Headers", "Authorization, Origin, X-Requested-With, Content-Type, Accept");
+
+                res->write(SimpleWeb::StatusCode::success_ok, "", header);
+            }
+            catch(const exception &e) {
+                res->write(SimpleWeb::StatusCode::client_error_bad_request, e.what());
+            }
+        };
         return std::move(*this);
     }
     App&& get(

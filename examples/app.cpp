@@ -1,16 +1,23 @@
 #include <bhttp/app.hpp>
 #include <bhttp/client.hpp>
 
-
+#include "upload.hpp"
 using namespace std;
 using boost::format;
 int main(int argc, char **argv) 
 {
+    auto exe_path{pyu::exe_path(argv[0])};
 // start a https/wss server
     // if expect it to run_detached(not block main thread), need to keep it in memory
-    BHS app("misc/server.crt", "misc/server.key");
+    BHS app("misc/server.crt", "misc/server.key", {
+        .log_path = exe_path / "log" / "app.log",
+        .db_path = exe_path / "app.db",
+        .magic_path = exe_path / "magic.mgc"
+    });
+    
+    app.use([argv0=argv[0]](auto* app){upload(app,argv0);})
     // curl https://127.0.0.1:9999/
-    app.serve_dir("*", Util::exe_path(argv[0]) / "www")
+    .serve_dir("*", Util::exe_path(argv[0]) / "www")
     // curl https://127.0.0.1:9999/info
     .get("^/info$", [](auto* app, auto res, auto req){
         stringstream s;
@@ -80,12 +87,11 @@ int main(int argc, char **argv)
     .listen(9999).run_detached();
 
 // and start another http/ws server
-    BH()
-    // so this can be used to serve spa[vuejs/reactjs/...] ui
-    // curl http://localhost:8888/  -- serve files in www dir within executable path
-    .serve_dir("*", Util::exe_path(argv[0]) / "www")
-    // curl http://localhost:8888/store/ -- serve files in store dir within executable path
-    .serve_dir("/store", Util::exe_path(argv[0]) / "store")
+    BH({
+        .log_path = exe_path / "log",
+        .db_path = exe_path / "app.db",
+        .magic_path = exe_path / "magic.mgc"
+    }).use([argv0=argv[0]](auto* app){upload(app,argv0);})
     // curl http://127.0.0.1:8888/info
     .get("^/info$", [](auto* app, auto res, auto req){
         // get data from another https server, and then return it to client
