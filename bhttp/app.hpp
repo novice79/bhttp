@@ -1,5 +1,4 @@
 #pragma once
-#include <pyu/pyu.h>
 #include "server_ws.hpp"
 #include "server_http.hpp"
 #include "server_https.hpp"
@@ -174,7 +173,8 @@ public:
             static void serve(
                 std::shared_ptr<typename HttpServer::Response> res, 
                 std::shared_ptr<typename HttpServer::Request> req, 
-                fs::path path)
+                fs::path path,
+                std::shared_ptr<FileMgr> fm)
             {
                 using namespace std;
                 try
@@ -208,7 +208,9 @@ public:
 
                     if (*ifs)
                     {
-                        header.emplace("Content-Type", Util::mime_type(path.string()) );
+                        auto mt{Util::mime_type(path.string())};
+                        if( mt.empty() ) mt = fm->file_type(path.string());
+                        header.emplace("Content-Type", mt );
                         // for firefox need to know you can handle range seeking
                         header.emplace("Accept-Ranges", "bytes");
                         uint64_t file_len = ifs->tellg();
@@ -263,11 +265,11 @@ public:
         boost::trim(vp);
         if(vp == "*" || vp.empty())
         {
-            server_.default_resource["GET"] = [dir = move(dir)](auto res, auto req) mutable
+            server_.default_resource["GET"] = [dir = move(dir), fm=this->fm](auto res, auto req) mutable
             {
                 auto web_root_path = fs::canonical(dir);
                 auto path = web_root_path / req->path;
-                FileSvr::serve(res, req, path);
+                FileSvr::serve(res, req, path, fm);
             };
         }
         else
@@ -276,13 +278,13 @@ public:
             if(vp[vp.length()-1] != '/') vp = vp + "/";
             vp += "(.*)$";
             // printf("vp=%s; dir=%s\n", vp.c_str(), dir.c_str());
-            server_.resource[vp]["GET"] = [dir = move(dir)](auto res, auto req) mutable
+            server_.resource[vp]["GET"] = [dir = move(dir), fm=this->fm](auto res, auto req) mutable
             {
                 auto fn = req->path_match[1].str();
                 fn = Util::urlDecode(fn);
                 auto web_root_path = fs::canonical(dir);
                 auto path = web_root_path / fn;
-                FileSvr::serve(res, req, path);
+                FileSvr::serve(res, req, path, fm);
             };
         }
         return std::move(*this);

@@ -8,37 +8,7 @@ file(GLOB_RECURSE SOURCE_FILES
 )
 add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES})
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
-set(Boost_USE_STATIC_LIBS        ON) # only find static libs
-set(Boost_USE_MULTITHREADED      ON)
-set(Boost_USE_STATIC_RUNTIME    OFF)
 
-find_package(Boost 1.79.0 REQUIRED COMPONENTS 
-    date_time 
-    filesystem 
-    serialization
-    atomic 
-    json
-    log_setup 
-    log 
-    program_options
-    system 
-)
-# include_directories(${Boost_INCLUDE_DIRS})
-target_include_directories(
-    ${PROJECT_NAME} 
-    PUBLIC
-    ${Boost_INCLUDE_DIRS}
-)
-find_package(OpenSSL 1.1.1 REQUIRED)
-find_package(ZLIB REQUIRED)
-target_link_libraries(
-    ${PROJECT_NAME} 
-    PUBLIC
-    ${Boost_LIBRARIES}
-    ${OPENSSL_LIBRARIES}
-    ${ZLIB_LIBRARIES}
-)
-find_package(ZLIB REQUIRED)
 find_package(pyu 1.0.0 REQUIRED)
 get_target_property(pyu_INCLUDE_DIRS pyu::pyu INTERFACE_INCLUDE_DIRECTORIES )
 message("pyu_INCLUDE_DIRS=${pyu_INCLUDE_DIRS}")
@@ -49,9 +19,6 @@ include_directories(${pyu_INCLUDE_DIRS})
 target_link_libraries(
     ${PROJECT_NAME} 
     PUBLIC
-    ${Boost_LIBRARIES}
-    ${OPENSSL_LIBRARIES}
-    ${ZLIB_LIBRARIES}
     pyu::pyu
 )
 install(

@@ -50,7 +50,7 @@ export default function IconAppBar() {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="fixed">
         <Toolbar>
-          <StoreIcon fontSize="large" sx={{ paddingRight : 2 }} />
+          <StoreIcon sx={{ fontSize: 43, pr : 1.7 }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Files
           </Typography>

@@ -46,39 +46,6 @@ endforeach()
 
 # message(FATAL_ERROR "You can not do this at all, CMake will exit." )
 
-# set(Boost_DEBUG ON)
-set(Boost_USE_STATIC_LIBS        ON) # only find static libs
-set(Boost_USE_MULTITHREADED      ON)
-# set(Boost_USE_STATIC_RUNTIME    OFF)
-
-find_package(Boost 1.79.0 REQUIRED COMPONENTS 
-    date_time 
-    filesystem 
-    serialization
-    atomic 
-    json
-    log_setup 
-    log 
-    program_options
-    system 
-)
-
-# set(OPENSSL_USE_STATIC_LIBS TRUE)
-find_package(OpenSSL 1.1.1 REQUIRED)
-message("OPENSSL_CRYPTO_LIBRARY=${OPENSSL_CRYPTO_LIBRARY}")
-message("OPENSSL_LIBRARIES=${OPENSSL_LIBRARIES}")
-
-# sudo apt-get install libz-dev
-# find_package(ZLIB REQUIRED)
-# message("ZLIB_LIBRARIES=${ZLIB_LIBRARIES}")
-find_package(pyu 1.0.0 REQUIRED)
-get_target_property(pyu_INCLUDE_DIRS pyu::pyu INTERFACE_INCLUDE_DIRECTORIES )
-message("pyu_INCLUDE_DIRS=${pyu_INCLUDE_DIRS}")
-get_target_property(pyu_LIBRARIES pyu::pyu IMPORTED_LOCATION_RELEASE )
-message("pyu_LIBRARIES=${pyu_LIBRARIES}")
-message("pyu_VERSION=${pyu_VERSION}")
-include_directories(${pyu_INCLUDE_DIRS})
-
 find_package(bhttp REQUIRED)
 get_target_property(bhttp_INCLUDE_DIRS bhttp::bhttp INTERFACE_INCLUDE_DIRECTORIES )
 message("bhttp_INCLUDE_DIRS=${bhttp_INCLUDE_DIRS}")
@@ -89,10 +56,6 @@ include_directories(${bhttp_INCLUDE_DIRS})
 foreach(t ${targets})
     target_link_libraries(
         ${t} 
-        ${Boost_LIBRARIES}
-        ${OPENSSL_LIBRARIES}
-        # ${ZLIB_LIBRARIES}
-        # ZLIB::ZLIB
         bhttp::bhttp
         ${CMAKE_DL_LIBS} 
     )

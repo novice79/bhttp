@@ -38,6 +38,7 @@ namespace bp = boost::process;
 namespace fs = boost::filesystem;
 namespace json = boost::json;
 
+#include <pyu/pyu.h>
 using namespace std;
 
 struct Util
@@ -135,29 +136,6 @@ struct Util
 		}
 		return s;
 	}
-	// std::string file_type(const std::string &path)
-	// {
-	// 	static magic_t handle = NULL;
-	// 	if (!handle)
-	// 	{
-	// 		// MAGIC_MIME: A shorthand for MAGIC_MIME_TYPE | MAGIC_MIME_ENCODING.
-	// 		handle = ::magic_open(MAGIC_NONE | MAGIC_MIME);
-	// 		if (handle == NULL)
-	// 		{
-	// 			printf("initialize magic library failed");
-	// 		}
-	// 		if( ::magic_load( handle, g_ms.c_str() ) != 0 )
-	// 		{
-	// 			printf("cannot load magic database -%s", magic_error(handle));
-	// 			magic_close(handle);
-	// 		}
-	// 		else
-	// 		{
-	// 			printf("load magic database succeed!");
-	// 		}
-	// 	}
-	// 	return ::magic_file(handle, path.c_str());
-	// }
 	static bool is_pac(const std::string &path)
 	{
 		using boost::iequals;
@@ -209,8 +187,8 @@ struct Util
 		if(iequals(ext, ".svgz")) return "image/svg+xml";
 		if(iequals(ext, ".mp4"))  return "video/mp4";
 		if(iequals(ext, ".pac"))  return "application/x-ns-proxy-autoconfig";
-		// return file_type(path);
-		return "application/octet-stream";
+		// return "application/octet-stream";
+		return "";
 	}
 	static std::string get_tid()
 	{
