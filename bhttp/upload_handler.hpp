@@ -6,10 +6,10 @@ private:
 
     fs::path upload_dir_;
     std::map<std::string, std::shared_ptr<std::ofstream>> writers_;
-    std::function<void()> cb_;
+    std::function<void(std::string)> cb_;
     std::mutex writers_mutex_;
 public:
-    UploadHandler(fs::path dir, std::function<void()> cb)
+    UploadHandler(fs::path dir, std::function<void(std::string)> cb)
     :upload_dir_( std::move(dir) ), cb_(std::move(cb))
     {
         if( !fs::exists(upload_dir_) )
@@ -47,7 +47,7 @@ public:
                     {
                         writer = std::make_shared<std::ofstream>(path, std::ofstream::binary);
                     }
-                    if(cb_) cb_();
+                    if(cb_) cb_(std::move(path));
                     break;
             }
             writer->write( buff.c_str(), buff.length() );

@@ -10,7 +10,7 @@ int main(int argc, char **argv)
 // start a https/wss server
     // if expect it to run_detached(not block main thread), need to keep it in memory
     BHS app("misc/server.crt", "misc/server.key", {
-        .log_path = exe_path / "log" / "app.log",
+        .log_path = exe_path / "log",
         .db_path = exe_path / "app.db",
         .magic_path = exe_path / "magic.mgc"
     });
