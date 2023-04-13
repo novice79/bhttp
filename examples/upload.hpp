@@ -2,10 +2,11 @@
 #include <bhttp/app.hpp>
 
 
-inline void upload(auto* app, const char* argv0) 
+inline void upload(auto& app, const char* argv0) 
 {
     auto store = pyu::exe_path(argv0) / "store";
-    app->cors()
+    app
+    .cors()
     .serve_dir("*", pyu::exe_path(argv0) / "www")
     .serve_dir("/store", store)
     .upload("^/upload$", store, [store](auto* app){

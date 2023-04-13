@@ -41,7 +41,7 @@ export default function IconAppBar() {
         });
       }, f=>{
         setCount(cnt=> cnt - 1)
-        if(count == 0) setUpload({})
+        // if(count == 0) setUpload({})
       }, url);
     });
     e.target.files = null

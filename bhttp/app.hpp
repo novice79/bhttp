@@ -111,7 +111,7 @@ public:
             static SimpleWeb::CaseInsensitiveMultimap header
             {
                 {"Content-Type", "text/plain; charset=utf-8"},
-                {"Access-Control-Allow-Origin", "*"}
+                // {"Access-Control-Allow-Origin", "*"}
             };
             int ret = uh.write( req->content.string() );
             if( 0 == ret)
@@ -291,6 +291,7 @@ public:
     }
     App&& cors()
     {
+        server_.cors = true;
         // Deals with CORS requests
         server_.default_resource["OPTIONS"] = [](
             std::shared_ptr<typename HttpServer::Response> res, 
@@ -298,14 +299,13 @@ public:
         {
             try {
                 // Set header fields
-                SimpleWeb::CaseInsensitiveMultimap header;
-                header.emplace("Content-Type", "text/plain; charset=utf-8");
-                header.emplace("Access-Control-Allow-Origin", "*");
-                header.emplace("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
-                header.emplace("Access-Control-Max-Age", "1728000");
-                header.emplace("Access-Control-Allow-Headers", "Authorization, Origin, X-Requested-With, Content-Type, Accept");
-
-                res->write(SimpleWeb::StatusCode::success_ok, "", header);
+                res->write(SimpleWeb::StatusCode::success_ok, {
+                    {"Content-Type", "text/plain; charset=utf-8"},
+                    {"Access-Control-Allow-Origin", "*"},
+                    {"Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE"},
+                    {"Access-Control-Max-Age", "1728000"},
+                    {"Access-Control-Allow-Headers", "Authorization, Origin, X-Requested-With, Content-Type, Accept"}
+                });
             }
             catch(const exception &e) {
                 res->write(SimpleWeb::StatusCode::client_error_bad_request, e.what());
@@ -466,15 +466,15 @@ public:
         server_.config.port = port;
         return std::move(*this);
     }
-    void run()
+    void run(std::function<void(unsigned short /*port*/)> cb = nullptr)
     {
-        server_.start();
+        server_.start(cb);
     }
 
-    void run_detached()
+    void run_detached(std::function<void(unsigned short /*port*/)> cb = nullptr)
     {
-        std::thread t([this]()mutable {
-            server_.start();
+        std::thread t([this, cb=std::move(cb)]()mutable {
+            server_.start(cb);
         });
         t.detach();
     }

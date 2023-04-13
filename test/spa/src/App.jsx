@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Drawer from '@mui/material/Drawer';
+import Box from '@mui/material/Box';
 import AppBar from './AppBar'
 import Files from './Files'
 import _ from 'lodash'
@@ -66,12 +67,16 @@ function App() {
       <Files />
       <Drawer
             anchor='bottom'
+            // sx={{overflow: 'auto'}}
             open={count > 0}
             onClose={()=>{
               console.log(`count=${count}`)
             }}
           >
+            <Box sx={{ overflow: 'auto', width: '100%', 
+              backgroundColor: 'rgba(0, 0, 0, .25)', maxHeight: '80vh' }}>
             {progressBars}
+            </Box>
           </Drawer>
     </>
   )

@@ -15,7 +15,7 @@ int main(int argc, char **argv)
         .magic_path = exe_path / "magic.mgc"
     });
     
-    app.use([argv0=argv[0]](auto* app){upload(app,argv0);})
+    app.use([argv0=argv[0]](auto* app){upload(*app,argv0);})
     // curl https://127.0.0.1:9999/
     .serve_dir("*", Util::exe_path(argv[0]) / "www")
     // curl https://127.0.0.1:9999/info
@@ -84,14 +84,16 @@ int main(int argc, char **argv)
     // macos show number of CPU Cores: sysctl -n hw.ncpu
     // run async loop in cpu core number thread pool, default size: 1
     .threads( std::thread::hardware_concurrency() )
-    .listen(9999).run_detached();
+    .listen(9999).run_detached([](auto port){
+        printf("https server listen on: %d\n", port );
+    });
 
 // and start another http/ws server
     BH({
         .log_path = exe_path / "log",
         .db_path = exe_path / "app.db",
         .magic_path = exe_path / "magic.mgc"
-    }).use([argv0=argv[0]](auto* app){upload(app,argv0);})
+    }).use([argv0=argv[0]](auto* app){upload(*app,argv0);})
     // curl http://127.0.0.1:8888/info
     .get("^/info$", [](auto* app, auto res, auto req){
         // get data from another https server, and then return it to client
@@ -107,9 +109,11 @@ int main(int argc, char **argv)
     .get("^/match/([0-9]+)$", [](auto* app, auto res, auto req){
         res->write(req->path_match[1].str());
     })
-    // curl -X POST http://127.0.0.1:8888/json \
-    // -H 'Content-Type: application/json' \
-    // -d '{"firstName":"John","lastName":"Smith","age":43}'
+    /*
+    curl -X POST http://127.0.0.1:8888/json \
+    -H 'Content-Type: application/json' \
+    -d '{"firstName":"John","lastName":"Smith","age":43}'
+    */
     .post("^/json$", [](auto* app, auto res, auto req){
         try {
             auto data = json::parse(req->content.string());
@@ -157,6 +161,8 @@ int main(int argc, char **argv)
         // schedule count. less than or equal zero, means: forever
         0
     )
-    .listen(8888).run();
+    .listen(8888).run([](auto port){
+        printf("http server listen on: %d\n", port );
+    });
     return 0;
 }
