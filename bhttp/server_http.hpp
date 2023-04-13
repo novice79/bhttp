@@ -26,8 +26,8 @@ namespace SimpleWeb {
   protected:
     class Connection;
     class Session;
-
   public:
+    bool cors;
     /// Response class where the content of the response is sent to client when the object is about to be destroyed.
     class Response : public std::enable_shared_from_this<Response>, public std::ostream {
       friend class ServerBase<socket_type>;
@@ -40,8 +40,9 @@ namespace SimpleWeb {
 
       Mutex send_queue_mutex;
       std::list<std::pair<std::shared_ptr<asio::streambuf>, std::function<void(const error_code &)>>> send_queue GUARDED_BY(send_queue_mutex);
-
-      Response(std::shared_ptr<Session> session_, long timeout_content) noexcept : std::ostream(nullptr), session(std::move(session_)), timeout_content(timeout_content) {
+      bool cors_;
+      Response(std::shared_ptr<Session> session_, long timeout_content, bool cors = false) noexcept 
+      : cors_(cors), std::ostream(nullptr), session(std::move(session_)), timeout_content(timeout_content) {
         rdbuf(streambuf.get());
       }
 
@@ -50,6 +51,7 @@ namespace SimpleWeb {
         bool content_length_written = false;
         bool chunked_transfer_encoding = false;
         bool event_stream = false;
+        bool cors_set{false};
         for(auto &field : header) {
           if(!content_length_written && case_insensitive_equal(field.first, "content-length"))
             content_length_written = true;
@@ -57,8 +59,13 @@ namespace SimpleWeb {
             chunked_transfer_encoding = true;
           else if(!event_stream && case_insensitive_equal(field.first, "content-type") && case_insensitive_equal(field.second, "text/event-stream"))
             event_stream = true;
-
+          if(case_insensitive_equal(field.first, "Access-Control-Allow-Origin") ) cors_set = true;
           *this << field.first << ": " << field.second << "\r\n";
+        }
+        if(cors_ && !cors_set)
+        {
+            *this << "Access-Control-Allow-Origin" << ": " << "*" << "\r\n";
+            *this << "Modifier" << ": " << "novice79" << "\r\n";
         }
         if(!content_length_written && !chunked_transfer_encoding && !event_stream && !close_connection_after_response)
           *this << "Content-Length: " << size << "\r\n\r\n";
@@ -527,7 +534,8 @@ namespace SimpleWeb {
 
     std::shared_ptr<ScopeRunner> handler_runner;
 
-    ServerBase(unsigned short port) noexcept : config(port), connections(new Connections()), handler_runner(new ScopeRunner()) {}
+    ServerBase(unsigned short port) noexcept 
+    : cors(false), config(port), connections(new Connections()), handler_runner(new ScopeRunner()) {}
 
     virtual void after_bind() {}
     virtual void accept() = 0;
@@ -760,7 +768,7 @@ namespace SimpleWeb {
 
     void write(const std::shared_ptr<Session> &session,
                std::function<void(std::shared_ptr<typename ServerBase<socket_type>::Response>, std::shared_ptr<typename ServerBase<socket_type>::Request>)> &resource_function) {
-      auto response = std::shared_ptr<Response>(new Response(session, config.timeout_content), [this](Response *response_ptr) {
+      auto response = std::shared_ptr<Response>(new Response(session, config.timeout_content, cors), [this](Response *response_ptr) {
         auto response = std::shared_ptr<Response>(response_ptr);
         response->send_on_delete([this, response](const error_code &ec) {
           response->session->connection->cancel_timeout();

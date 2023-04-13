@@ -8,7 +8,7 @@ export default defineConfig({
   },
   plugins: [react()],
   build: {
-    outDir: "../../dist/bin/www",
+    outDir: `../../dist/bin/www`,
     emptyOutDir: true
   }
 })

@@ -41,16 +41,16 @@ export default function IconAppBar() {
         });
       }, f=>{
         setCount(cnt=> cnt - 1)
-        if(count == 0) setUpload({})
+        // if(count == 0) setUpload({})
       }, url);
     });
     e.target.files = null
   }
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
+      <AppBar position="fixed">
         <Toolbar>
-          <StoreIcon fontSize="large" sx={{ paddingRight : 2 }} />
+          <StoreIcon sx={{ fontSize: 43, pr : 1.7 }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Files
           </Typography>

@@ -2,18 +2,9 @@ import React from 'react'
 import { useAtom } from 'jotai'
 import { fileAtom, filterAtom } from './atom'
 import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import { styled } from '@mui/material/styles';
 import { Download, Delete } from '@mui/icons-material';
 import util from "./util";
-const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
-  ...theme.typography.body2,
-  padding: theme.spacing(1),
-  textAlign: 'center',
-  overflowWrap: 'break-word',
-  color: theme.palette.text.secondary,
-}));
+
 
 export default function Files() {
     const [ files, setFile ] = useAtom(fileAtom)
@@ -25,7 +16,9 @@ export default function Files() {
             <Box sx={{ 
                 width: '100%', 
                 display: 'flex', flexWrap: 'wrap', alignItems: 'center',
-                border: '.2rem groove' }}>
+                backgroundColor: 'rgb(177, 250, 250)',
+                border: '.3rem groove',
+                marginTop: '.4rem' }}>
                 <Box sx={{ width: '60%', overflowWrap: 'break-word' }}>{fi.name}</Box>
                 <Box sx={{ width: '20%', overflowWrap: 'break-word' }}>{util.formatFileSize(fi.size)}</Box>
                 <Box sx={{ 
@@ -53,7 +46,7 @@ export default function Files() {
         </React.Fragment>
     );
     return (
-        <Box sx={{ width: '100%'}}>
+        <Box sx={{ width: '100%', marginTop: '4.1rem'}}>
             {listItems}
         </Box>
     );

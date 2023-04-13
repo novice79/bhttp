@@ -270,6 +270,7 @@ public:
     }
     App&& cors()
     {
+        server_.cors = true;
         // Deals with CORS requests
         server_.default_resource["OPTIONS"] = [](
             std::shared_ptr<typename HttpServer::Response> res, 
