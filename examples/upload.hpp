@@ -8,7 +8,8 @@ inline void upload(auto* app, const char* argv0)
     app->cors()
     .serve_dir("*", Util::exe_path(argv0) / "www")
     .serve_dir("/store", store)
-    .upload("^/upload$", store, [store](auto* app){
+    .upload("^/upload$", store, [store](auto* app, auto path){
+        printf("upload %s completed\n", path.c_str() );
         app->ws_broadcast("^/store$", json::serialize( Util::file_info(store) ) );
     })
     .post("^/del$", [store](auto* app, auto res, auto req){

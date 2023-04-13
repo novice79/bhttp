@@ -85,11 +85,11 @@ public:
         doer(this);
         return std::move(*this);
     }
-    App&& upload(std::string vp, fs::path dir, std::function<void(App*)> cb = nullptr)
+    App&& upload(std::string vp, fs::path dir, std::function<void(App*, std::string)> cb = nullptr)
     {
         this->post(vp, [dir=std::move(dir), cb=std::move(cb), this](auto* app, auto res, auto req)
         {
-            static UploadHandler uh( std::move(dir), std::bind(cb, this) );
+            static UploadHandler uh( std::move(dir), std::bind(cb, this, ph::_1) );
             static SimpleWeb::CaseInsensitiveMultimap header
             {
                 {"Content-Type", "text/plain; charset=utf-8"},
