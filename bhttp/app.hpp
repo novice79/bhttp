@@ -93,11 +93,11 @@ public:
     db(pyu::create_db(p.db_path)),
     fm(pyu::create_fm(p.magic_path))
     {emplace_ws();}
-    ~App()
-    {
-        printf("~App()\n");
-        server_.stop();
-    }
+    // ~App()
+    // {
+    //     printf("~App()\n");
+    //     server_.stop();
+    // }
     App&& use(std::function<void(App*)> doer)
     {   
         doer(this);
