@@ -262,6 +262,11 @@ public:
                 }
             }
         };
+        if( !fs::exists(dir) )
+        {
+            printf("%s not exist, create it\n", dir.c_str());
+            fs::create_directories(dir);
+        } 
         boost::trim(vp);
         if(vp == "*" || vp.empty())
         {
