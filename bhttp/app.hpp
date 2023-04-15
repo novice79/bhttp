@@ -450,6 +450,19 @@ public:
         for (auto &a_connection : cpp_channel_endpoint.get_connections())
             a_connection->send(msg);
     }
+    void ws_bc(std::string ep, std::string msg, int sec = 1)
+    {
+        // this throttle broadcast function not very useful
+        using namespace std::chrono;
+        static auto start = high_resolution_clock::now();
+        static std::mutex s_mutex;
+        auto now = high_resolution_clock::now();
+        std::lock_guard<std::mutex> guard(s_mutex);
+        if (duration_cast<seconds>(now - start).count() > sec){
+            ws_broadcast(std::move(ep), std::move(msg));
+            start = high_resolution_clock::now();
+        }
+    }
     App&& cron_job(std::function<void(App*)> cb, bpt::time_duration d = bpt::seconds(1), int repeat = 1)
     {
         std::make_shared<Timer>(
