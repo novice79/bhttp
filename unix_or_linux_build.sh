@@ -13,8 +13,8 @@ elif [[ "$OSTYPE" == "win32" ]]; then
 else
     :
 fi
-dir="_build/$OSTYPE"
-examplePrefix="dist/$OSTYPE"
+dir="$PWD/_build/$OSTYPE"
+examplePrefix="$PWD/dist/$OSTYPE"
 PREFIX=${prefix:-$examplePrefix}
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -46,7 +46,7 @@ cmake --install "$dir/lib"
 
 # build example exe
 cmake -GNinja -H"examples" -B$dir \
--DCMAKE_FIND_ROOT_PATH="$PRBUILT;$PREFIX" \
+-DCMAKE_FIND_ROOT_PATH="$PREFIX;$PRBUILT" \
 -DCMAKE_INSTALL_PREFIX=$examplePrefix \
 -DCMAKE_BUILD_TYPE=Release 
 
