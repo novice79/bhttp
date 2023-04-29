@@ -2,8 +2,8 @@
 # set -x
 set -e 
 
-dir="_build"
-PREFIX=${prefix:-dist}
+dir="$PWD/_build"
+PREFIX=${prefix:-"$PWD/dist"}
 while [ $# -gt 0 ]; do
   case "$1" in
     -prefix=* | --PREFIX=* | prefix=* | PREFIX=*)
@@ -15,9 +15,10 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+PRBUILT="$HOME/clib-prebuilt/macos"
 # build http lib
 cmake -GNinja -H"bhttp" -B"$dir/lib" \
--DCMAKE_FIND_ROOT_PATH="$HOME/clib-prebuilt/macos" \
+-DCMAKE_FIND_ROOT_PATH="$PRBUILT" \
 -DCMAKE_INSTALL_PREFIX=$PREFIX \
 -DCMAKE_BUILD_TYPE=Release 
 
@@ -26,7 +27,7 @@ cmake --install "$dir/lib"
 
 # build example exe
 cmake -GNinja -H"examples" -B$dir \
--DCMAKE_FIND_ROOT_PATH="$HOME/clib-prebuilt/macos;$PREFIX" \
+-DCMAKE_FIND_ROOT_PATH="$PREFIX;$PRBUILT" \
 -DCMAKE_INSTALL_PREFIX=dist \
 -DCMAKE_BUILD_TYPE=Release 
 

@@ -24,7 +24,6 @@ foreach(file ${SOURCE_FILES})
     add_executable(${name} "${file}")
     list(APPEND targets ${name})
 endforeach()
-
 # message(FATAL_ERROR "You can not do this at all, CMake will exit." )
 
 # set(Boost_DEBUG ON)
@@ -56,10 +55,13 @@ message("OPENSSL_LIBRARIES=${OPENSSL_LIBRARIES}")
 
 find_path(bhttp_headers "bhttp/server_http.hpp")
 if(NOT bhttp_headers)
-  message(FATAL_ERROR "Can't find folder containing bhttp/server_http.hpp")
+    message(FATAL_ERROR "Can't find folder containing bhttp/server_http.hpp")
+else()
+    message("bhttp_headers=${bhttp_headers}")
 endif()
 include_directories(${bhttp_headers})
 foreach(t ${targets})
+
     target_link_libraries(
         ${t} 
         ${Boost_LIBRARIES}
@@ -68,6 +70,7 @@ foreach(t ${targets})
         # ZLIB::ZLIB
         ${CMAKE_DL_LIBS} 
     )
+    # target_include_directories(${t} SYSTEM PRIVATE ${bhttp_headers})
     if(WIN32)
         target_link_libraries(${t} ws2_32 wsock32)
     endif()
