@@ -174,7 +174,8 @@ public:
                 std::shared_ptr<typename HttpServer::Response> res, 
                 std::shared_ptr<typename HttpServer::Request> req, 
                 fs::path path,
-                std::shared_ptr<FileMgr> fm)
+                std::shared_ptr<FileMgr> fm,
+                fs::path www_root)
             {
                 using namespace std;
                 try
@@ -187,7 +188,7 @@ public:
                     if( !fs::exists(path) )
                     {
                         // This is for spa routing
-                        path /= "index.html";
+                        path = www_root / "index.html";
                     }    
                     if( !fs::exists(path) )
                     {
@@ -274,7 +275,7 @@ public:
             {
                 auto web_root_path = fs::canonical(dir);
                 auto path = web_root_path / req->path;
-                FileSvr::serve(res, req, path, fm);
+                FileSvr::serve(res, req, std::move(path), fm, std::move(web_root_path));
             };
         }
         else
@@ -289,7 +290,7 @@ public:
                 fn = Util::urlDecode(fn);
                 auto web_root_path = fs::canonical(dir);
                 auto path = web_root_path / fn;
-                FileSvr::serve(res, req, path, fm);
+                FileSvr::serve(res, req, std::move(path), fm, std::move(web_root_path));
             };
         }
         return std::move(*this);
