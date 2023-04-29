@@ -98,6 +98,14 @@ public:
     //     printf("~App()\n");
     //     server_.stop();
     // }
+    void post_method(std::function<void()> cb)
+    {
+        namespace io = boost::asio;
+        if(cb)
+        {
+            io::post(*server_.io_service, cb);
+        }
+    }
     App&& use(std::function<void(App*)> doer)
     {   
         doer(this);
@@ -107,7 +115,10 @@ public:
     {
         this->post(vp, [dir=std::move(dir), cb=std::move(cb), this](auto* app, auto res, auto req)
         {
-            static UploadHandler uh( std::move(dir), std::bind(cb, this, ph::_1) );
+            static UploadHandler uh(std::move(dir), [cb=std::move(cb),this](std::string path){
+                // when this lambda be called, file is not finished writing, so post-call callback
+                post_method(std::bind(cb, this, std::move(path)));
+            });
             static SimpleWeb::CaseInsensitiveMultimap header
             {
                 {"Content-Type", "text/plain; charset=utf-8"},
