@@ -25,3 +25,4 @@ docs/doxygen_output
 *.bin
 *.zip
 temp/
+memo.md
