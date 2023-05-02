@@ -44,7 +44,7 @@ cmake -GNinja -H"bhttp" -B"$dir/lib" \
 
 cmake --build "$dir/lib"
 cmake --install "$dir/lib"
-[ "$LIB_ONLY" = true ] && exit 0
+[ "$LIB_ONLY" = true ] && continue
 # build example exe
 cmake -GNinja -H"examples" -B$dir \
 -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE" \
