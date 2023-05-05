@@ -11,6 +11,9 @@ while [ $# -gt 0 ]; do
     -prefix=* | --PREFIX=* | prefix=* | PREFIX=*)
       lib_prefix="${1#*=}"
       ;;
+    lib)
+      LIB_ONLY=true
+      ;;
     -h | --help)
       echo "build example app(s) and install lib to target dir with:"
       echo "$scirptName prefix=\$targetDir"
@@ -61,6 +64,7 @@ cmake -GNinja -H"bhttp" -B"$dir/lib" \
 
 cmake --build "$dir/lib"
 cmake --install "$dir/lib"
+[ "$LIB_ONLY" = true ] && continue
 # lib and app need to be same CFLAGS
 # -DCMAKE_C_FLAGS="-w -DS_IREAD=S_IRUSR -DS_IWRITE=S_IWUSR -DS_IEXEC=S_IXUSR" \
 # -DANDROID_STL=c++_static \  or c++_shared 
