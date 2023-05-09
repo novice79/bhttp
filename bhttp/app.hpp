@@ -57,6 +57,7 @@ class App
 
     WsServer ws_;
     HttpServer server_;
+    std::thread* t_; 
 public:
     struct Paths
     {
@@ -85,7 +86,8 @@ public:
     App(Paths&& p)
     :logger(pyu::create_logger(p.log_path)),
     db(pyu::create_db(p.db_path)),
-    fm(pyu::create_fm(p.magic_path))
+    fm(pyu::create_fm(p.magic_path)),
+    t_(0)
     {emplace_ws();}
     App(std::string crt, std::string key, Paths&& p)
     :server_(crt, key),ws_(crt, key),
@@ -93,11 +95,25 @@ public:
     db(pyu::create_db(p.db_path)),
     fm(pyu::create_fm(p.magic_path))
     {emplace_ws();}
-    // ~App()
-    // {
-    //     printf("~App()\n");
-    //     server_.stop();
-    // }
+    ~App()
+    {
+        printf("~App()\n");
+        server_.stop();
+        if(t_) 
+        {
+            t_->join();
+            delete t_;
+        }
+    }
+    bool port_in_use(unsigned short port) {
+        using namespace boost::asio;
+        using ip::tcp;
+        io_service svc;
+        tcp::acceptor a(svc);
+        boost::system::error_code ec;
+        a.open(tcp::v4(), ec) || a.bind({ tcp::v4(), port }, ec);
+        return ec == error::address_in_use;
+    }
     void post_method(std::function<void()> cb)
     {
         namespace io = boost::asio;
@@ -503,10 +519,9 @@ public:
 
     void run_detached(std::function<void(unsigned short /*port*/)> cb = nullptr)
     {
-        std::thread t([this, cb=std::move(cb)]()mutable {
+        t_ = new std::thread([this, cb=std::move(cb)]()mutable {
             server_.start(cb);
         });
-        t.detach();
     }
 private:
     void emplace_ws()
