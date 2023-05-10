@@ -105,7 +105,7 @@ public:
             delete t_;
         }
     }
-    bool port_in_use(unsigned short port) {
+    static bool port_in_use(unsigned short port) {
         using namespace boost::asio;
         using ip::tcp;
         io_service svc;
