@@ -33,6 +33,7 @@ export API=23
 abis=( 
     "armeabi-v7a"
     "arm64-v8a"
+    "x86_64"
 )
 for abi in "${abis[@]}" ; do
 
