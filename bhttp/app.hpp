@@ -58,6 +58,7 @@ class App
     WsServer ws_;
     HttpServer server_;
     std::thread* t_; 
+    std::vector<std::shared_ptr<UploadHandler>> uHandlers_;
 public:
     struct Paths
     {
@@ -129,18 +130,18 @@ public:
     }
     App&& upload(std::string vp, fs::path dir, std::function<void(App*, std::string)> cb = nullptr)
     {
-        this->post(vp, [dir=std::move(dir), cb=std::move(cb), this](auto* app, auto res, auto req)
+        uHandlers_.emplace_back(new UploadHandler(std::move(dir), [cb=std::move(cb),this](std::string path){
+            // when this lambda be called, file is not finished writing, so post-call callback
+            if( cb ) post_method(std::bind(cb, this, std::move(path)));
+        }));
+        this->post(vp, [uh=uHandlers_.back(), this](auto* app, auto res, auto req)
         {
-            static UploadHandler uh(std::move(dir), [cb=std::move(cb),this](std::string path){
-                // when this lambda be called, file is not finished writing, so post-call callback
-                post_method(std::bind(cb, this, std::move(path)));
-            });
             static SimpleWeb::CaseInsensitiveMultimap header
             {
                 {"Content-Type", "text/plain; charset=utf-8"},
                 // {"Access-Control-Allow-Origin", "*"}
             };
-            int ret = uh.write( req->content.string() );
+            int ret = uh->write( req->content.string() );
             if( 0 == ret)
             {
                 res->write(SimpleWeb::StatusCode::success_ok, header);
