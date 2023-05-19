@@ -99,6 +99,7 @@ public:
     ~App()
     {
         printf("~App()\n");
+        ws_.external_stop();
         server_.stop();
         if(t_) 
         {

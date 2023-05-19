@@ -69,7 +69,7 @@ cmake --build $dir --config Release -- -allowProvisioningUpdates
 cmake --install $dir
 
 done
-
+rm -rfv "$prefix/bhttp.xcframework"
 xcodebuild -create-xcframework \
 -library $PREFIX/dev-arm64/lib/libbhttp-dev-arm64.a \
 -headers $PREFIX/dev-arm64/include \

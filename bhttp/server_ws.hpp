@@ -446,7 +446,15 @@ namespace SimpleWeb {
           t.join();
       }
     }
-
+    void external_stop()
+    {
+      for(auto &pair : endpoint) {
+        LockGuard lock(pair.second.connections_mutex);
+        for(auto &connection : pair.second.connections)
+          connection->close();
+        pair.second.connections.clear();
+      }
+    }
     /// Stop accepting new connections, and close current connections
     void stop() noexcept {
       std::lock_guard<std::mutex> lock(start_stop_mutex);
