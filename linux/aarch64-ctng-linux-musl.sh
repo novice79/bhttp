@@ -1,8 +1,8 @@
 #!/bin/bash
 
 set -e 
-# brew uninstall aarch64-unknown-linux-musl armv7-unknown-linux-musleabihf x86_64-unknown-linux-musl
-# brew untap messense/macos-cross-toolchains
+
+# brew tap novice79/gcc-cross
 # brew install armv7-ctng-linux-musleabihf aarch64-ctng-linux-musl x86_64-ctng-linux-musl
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         PRBUILT="/cross/aarch64-ctng-linux-musl"
