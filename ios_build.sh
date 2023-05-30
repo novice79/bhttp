@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#  ./ios_build.sh prefix=$HOME/clib-prebuilt/ios
+#  ./ios_build.sh prefix=$HOME/clib-prebuilt/ios lib
 set -e
 scirptName=$0
 ToolChainFile=""$PWD/cmake/ios.toolchain.cmake""

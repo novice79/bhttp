@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 # set -x
-
+# ./android_build.sh prefix=$HOME/clib-prebuilt/android lib
 scirptName=$0
 dir=_build/android_*
 example_prefix="dist/android"

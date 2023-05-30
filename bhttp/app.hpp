@@ -154,11 +154,11 @@ public:
         });    
         return std::move(*this);
     }
-    App&& serve_dir(std::string vp, fs::path dir)
+    App&& serve_dir(std::string vp, fs::path dir, bool download = false)
     {
-        return serve_dir(vp, dir.string() );
+        return serve_dir(vp, dir.string(), download );
     }
-    App&& serve_dir(std::string vp, std::string dir)
+    App&& serve_dir(std::string vp, std::string dir, bool download = false)
     {
         class FileSvr : public std::enable_shared_from_this<FileSvr>
         {
@@ -204,7 +204,9 @@ public:
                 std::shared_ptr<typename HttpServer::Request> req, 
                 fs::path path,
                 std::shared_ptr<FileMgr> fm,
-                fs::path www_root)
+                fs::path www_root,
+                bool dl_flag
+            )
             {
                 using namespace std;
                 try
@@ -241,6 +243,15 @@ public:
                         auto mt{Util::mime_type(path.string())};
                         if( mt.empty() ) mt = fm->file_type(path.string());
                         header.emplace("Content-Type", mt );
+                        if(dl_flag)
+                        {
+                            header.emplace("Content-Disposition", 
+                                boost::str(
+                                    boost::format( "attachment; filename=%1%; filename*=%1%") 
+                                    % path.filename()
+                                )
+                            );
+                        }
                         // for firefox need to know you can handle range seeking
                         header.emplace("Accept-Ranges", "bytes");
                         uint64_t file_len = ifs->tellg();
@@ -300,11 +311,11 @@ public:
         boost::trim(vp);
         if(vp == "*" || vp.empty())
         {
-            server_.default_resource["GET"] = [dir = move(dir), fm=this->fm](auto res, auto req) mutable
+            server_.default_resource["GET"] = [dir = move(dir), fm=this->fm, download](auto res, auto req) mutable
             {
                 auto web_root_path = fs::canonical(dir);
                 auto path = web_root_path / req->path;
-                FileSvr::serve(res, req, std::move(path), fm, std::move(web_root_path));
+                FileSvr::serve(res, req, std::move(path), fm, std::move(web_root_path), download);
             };
         }
         else
@@ -313,13 +324,13 @@ public:
             if(vp[vp.length()-1] != '/') vp = vp + "/";
             vp += "(.*)$";
             // printf("vp=%s; dir=%s\n", vp.c_str(), dir.c_str());
-            server_.resource[vp]["GET"] = [dir = move(dir), fm=this->fm](auto res, auto req) mutable
+            server_.resource[vp]["GET"] = [dir = move(dir), fm=this->fm, download](auto res, auto req) mutable
             {
                 auto fn = req->path_match[1].str();
                 fn = Util::urlDecode(fn);
                 auto web_root_path = fs::canonical(dir);
                 auto path = web_root_path / fn;
-                FileSvr::serve(res, req, std::move(path), fm, std::move(web_root_path));
+                FileSvr::serve(res, req, std::move(path), fm, std::move(web_root_path), download);
             };
         }
         return std::move(*this);
